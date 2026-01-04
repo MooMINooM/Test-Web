@@ -8,6 +8,68 @@ let allSchoolData = [];
 let allNewsData = [];
 let allOfficialDocs = [];
 let allFormDocs = [];
+let allInnovationsData = []; 
+const INNOV_ITEMS_PER_PAGE = 6;
+
+export function renderInnovations(data, page = 1) {
+    const container = document.getElementById('innovations-container');
+    if (!container) return;
+    
+    // บันทึกข้อมูลเข้าตัวแปร Global เพื่อใช้ค้นหา/แบ่งหน้า
+    if (allInnovationsData.length === 0 || data.length > allInnovationsData.length) {
+        allInnovationsData = data;
+    }
+
+    container.innerHTML = '';
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div class="col-span-full text-center py-20 bg-white/50 rounded-[2.5rem] border border-dashed border-slate-200 text-slate-400 font-medium">ไม่พบผลงานนวัตกรรม</div>';
+        return;
+    }
+
+    // Logic แบ่งหน้า (1 หน้ามี 6 อัน)
+    const startIndex = (page - 1) * INNOV_ITEMS_PER_PAGE;
+    const pageItems = data.slice(startIndex, startIndex + INNOV_ITEMS_PER_PAGE);
+
+    // ปรับ Grid เป็น 3 คอลัมน์ (ขนาดการ์ดจะเล็กลงพอดีตา)
+    container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fade-in";
+
+    pageItems.forEach(item => {
+        const div = document.createElement('div');
+        // Bento Style: การ์ดขอบมนพรีเมียม
+        div.className = "group bg-white rounded-[2.5rem] shadow-[0_15px_40px_-15px_rgba(0,0,0,0.05)] border border-slate-100 overflow-hidden hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.12)] hover:-translate-y-2 transition-all duration-700 cursor-pointer flex flex-col";
+        div.onclick = () => window.open(item.fileUrl, '_blank');
+        
+        div.innerHTML = `
+            <div class="aspect-[16/10] bg-slate-50 relative overflow-hidden">
+                ${item.coverImageUrl ? `<img src="${item.coverImageUrl}" class="w-full h-full object-cover group-hover:scale-110 transition duration-[2s]">` : '<div class="w-full h-full flex items-center justify-center"><i class="fa-solid fa-lightbulb text-6xl text-slate-200"></i></div>'}
+                <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-xl text-[10px] font-black text-blue-600 shadow-sm border border-white uppercase tracking-widest">
+                    ${item.subject || 'Creative'}
+                </div>
+            </div>
+            <div class="p-6 flex-1 flex flex-col">
+                <h4 class="font-bold text-lg text-slate-800 line-clamp-2 h-14 group-hover:text-blue-600 transition-colors leading-snug">
+                    ${item.title}
+                </h4>
+                
+                <div class="mt-auto pt-5 border-t border-slate-50">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 shadow-inner group-hover:bg-blue-600 group-hover:text-white transition-colors duration-500">
+                            <i class="fa-solid fa-user-pen text-sm"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-xs font-black text-slate-700 truncate uppercase tracking-tight">${item.creator || '-'}</p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 italic">ระดับ: ${item.class || '-'}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+
+    // เรียกวาดปุ่มหน้า 1 2 3
+    renderPagination('innovations-pagination', data.length, INNOV_ITEMS_PER_PAGE, page, "window.pagedInnovations");
+}
 
 // --- Config ---
 const ACH_ITEMS_PER_PAGE = 6;
@@ -795,3 +857,13 @@ export function closeAllDropdowns() {
 }
 
 console.log("Lumina Bento Bridge: Connected");
+// ✅ เพิ่มฟังก์ชัน Bridge เหล่านี้ไว้ท้ายไฟล์ ui.js
+window.pagedInnovations = (p) => renderInnovations(allInnovationsData, p);
+
+window.filterInnovations = (inputId) => {
+    const val = document.getElementById(inputId).value.toLowerCase();
+    const filtered = allInnovationsData.filter(i => 
+        (i.title + i.creator + i.subject).toLowerCase().includes(val)
+    );
+    renderInnovations(filtered, 1); // ค้นหาแล้วเริ่มที่หน้า 1 เสมอ
+};

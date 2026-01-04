@@ -645,31 +645,52 @@ export function renderHomeNews(newsList) {
 }
 
 // =============================================================================
-// 8. WINDOW BRIDGES (Search & Action Functions)
+// 8. WINDOW BRIDGES (Search, Filter, Actions) - ฉบับแก้ไขสมบูรณ์
 // =============================================================================
 
-// Exports for script.js
-export function renderTeacherAchievements(data) { allTeacherData = data; renderAchievementSystem('teacher-achievements-container', data, 'teacher'); }
-export function renderStudentAchievements(data) { allStudentData = data; renderAchievementSystem('student-achievements-container', data, 'student'); }
+// ✅ แก้ไข: เพิ่มการ Render แยกประเภท (O-NET, NT, RT) ให้ครบ
 export function renderSchoolAchievements(data) { 
-    allSchoolData = data; 
-    const general = data.filter(i => !(i.title+i.competition).includes('O-NET') && !(i.title+i.competition).includes('NT') && !(i.title+i.competition).includes('RT'));
+    if (!data) return;
+    allSchoolData = data.sort((a, b) => b.id - a.id); 
+    
+    // แยกข้อมูล
+    const onet = allSchoolData.filter(i => (i.title + i.competition).includes('O-NET'));
+    const nt = allSchoolData.filter(i => (i.title + i.competition).includes('NT'));
+    const rt = allSchoolData.filter(i => (i.title + i.competition).includes('RT'));
+    const general = allSchoolData.filter(i => 
+        !(i.title + i.competition).includes('O-NET') && 
+        !(i.title + i.competition).includes('NT') && 
+        !(i.title + i.competition).includes('RT')
+    );
+
+    // แสดงผลทั่วไป
     renderAchievementSystem('school-achievements-container', general, 'school'); 
+    
+    // ✅ เพิ่มส่วนนี้: แสดงผลวิชาการแยกกล่อง (ถ้ามีกล่องรองรับใน HTML)
+    if(document.getElementById('onet-container')) renderAchievementSystem('onet-container', onet, 'school');
+    if(document.getElementById('nt-container')) renderAchievementSystem('nt-container', nt, 'school');
+    if(document.getElementById('rt-container')) renderAchievementSystem('rt-container', rt, 'school');
 }
 
-// Search Logic
+export function renderTeacherAchievements(data) { allTeacherData = data; renderAchievementSystem('teacher-achievements-container', data, 'teacher'); }
+export function renderStudentAchievements(data) { allStudentData = data; renderAchievementSystem('student-achievements-container', data, 'student'); }
+
+// ✅ แก้ไข: Search แล้วต้องรีเซ็ตไปหน้า 1 เสมอ
 window.filterAchievements = (inputId, type, containerId) => {
     const val = document.getElementById(inputId).value.toLowerCase();
     const source = type==='teacher' ? allTeacherData : (type==='student' ? allStudentData : allSchoolData);
-    const filtered = source.filter(i => (i.title+i.students+i.name+i.competition).toLowerCase().includes(val));
+    
+    // ค้นหาครอบคลุมทุกฟิลด์
+    const filtered = source.filter(i => (i.title+i.students+i.name+(i.competition||'')).toLowerCase().includes(val));
+    
     currentFolderFilter = val ? 'ผลการค้นหา' : null;
-    renderAchievementSystem(containerId, filtered, type);
+    renderAchievementSystem(containerId, filtered, type, 1); // <-- บังคับหน้า 1
 };
 
 window.filterNews = (id) => {
     const val = document.getElementById(id).value.toLowerCase();
     const filtered = allNewsData.filter(i => i.title.toLowerCase().includes(val));
-    renderNews(filtered); // Render will handle pagination reset
+    renderNews(filtered, 1); // <-- บังคับหน้า 1
 };
 
 window.filterDocuments = (id, containerId) => {
@@ -677,12 +698,13 @@ window.filterDocuments = (id, containerId) => {
     const type = containerId.includes('official') ? 'official' : 'form';
     const source = type === 'official' ? allOfficialDocs : allFormDocs;
     const filtered = source.filter(i => (i.title + i.category).toLowerCase().includes(val));
+    
     currentDocFolder[type] = val ? 'ผลการค้นหา' : null;
-    renderDocumentSystem(filtered, containerId, type);
+    renderDocumentSystem(filtered, containerId, type, 1); // <-- บังคับหน้า 1
 };
 
-// Folder Logic Bridges
-window.selectFolder = (cid, type, name) => { currentFolderFilter = name; const data = type==='teacher'?allTeacherData : (type==='student'?allStudentData : allSchoolData); renderAchievementSystem(cid, data, type); };
-window.clearFolderFilter = (cid, type) => { currentFolderFilter = null; const data = type==='teacher'?allTeacherData : (type==='student'?allStudentData : allSchoolData); renderAchievementSystem(cid, data, type); };
-window.selectDocFolder = (cid, type, catName) => { currentDocFolder[type] = catName; const data = type === 'official' ? allOfficialDocs : allFormDocs; renderDocumentSystem(data, cid, type); };
-window.clearDocFolder = (cid, type) => { currentDocFolder[type] = null; const data = type === 'official' ? allOfficialDocs : allFormDocs; renderDocumentSystem(data, cid, type); };
+// Folder Logic Bridges (ต้องส่ง page 1 ไปด้วย เพื่อกันบั๊กหน้าค้าง)
+window.selectFolder = (cid, type, name) => { currentFolderFilter = name; const data = type==='teacher'?allTeacherData : (type==='student'?allStudentData : allSchoolData); renderAchievementSystem(cid, data, type, 1); };
+window.clearFolderFilter = (cid, type) => { currentFolderFilter = null; const data = type==='teacher'?allTeacherData : (type==='student'?allStudentData : allSchoolData); renderAchievementSystem(cid, data, type, 1); };
+window.selectDocFolder = (cid, type, catName) => { currentDocFolder[type] = catName; const data = type === 'official' ? allOfficialDocs : allFormDocs; renderDocumentSystem(data, cid, type, 1); };
+window.clearDocFolder = (cid, type) => { currentDocFolder[type] = null; const data = type === 'official' ? allOfficialDocs : allFormDocs; renderDocumentSystem(data, cid, type, 1); };

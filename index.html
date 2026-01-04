@@ -560,7 +560,28 @@
             <section id="page-teacher-achievements" class="page-content hidden"><div class="bg-white rounded-2xl shadow p-8"><h2 class="section-title">ผลงานครู</h2><div id="teacher-achievements-container"></div></div></section>
             <section id="page-student-achievements" class="page-content hidden"><div class="bg-white rounded-2xl shadow p-8"><h2 class="section-title">ผลงานนักเรียน</h2><div id="student-achievements-container"></div></div></section>
             <section id="page-school-achievements" class="page-content hidden"><div class="bg-white rounded-2xl shadow p-8"><h2 class="section-title">ผลงานสถานศึกษา</h2><div id="school-achievements-container" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div></div></section>
-            <section id="page-innovations" class="page-content hidden"><div class="bg-white rounded-2xl shadow p-8"><h2 class="section-title">คลังนวัตกรรม</h2><div id="innovations-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div></div></section>
+            <section id="page-innovations" class="page-content hidden">
+    <div class="max-w-7xl mx-auto animate-fade-in pb-20">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+            <div>
+                <h2 class="text-4xl font-black text-slate-800 tracking-tight flex items-center gap-3">
+                    <i class="fa-solid fa-lightbulb text-amber-400"></i> คลังนวัตกรรม
+                </h2>
+                <p class="text-slate-500 mt-2">รวมผลงานนวัตกรรมและสื่อการสอนของบุคลากร</p>
+            </div>
+            <div class="relative group">
+                <input type="text" id="search-innovations" oninput="window.filterInnovations('search-innovations')" 
+                    placeholder="ค้นหาชื่อผลงาน/ผู้จัดทำ..." 
+                    class="w-full md:w-80 bg-white border border-slate-200 px-6 py-3.5 rounded-[1.5rem] shadow-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all duration-300">
+                <i class="fa-solid fa-magnifying-glass absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors"></i>
+            </div>
+        </div>
+
+        <div id="innovations-container"></div>
+
+        <div id="innovations-pagination" class="mt-12 flex justify-center"></div>
+    </div>
+</section>
             
             <section id="page-academic-onet" class="page-content hidden"><div class="bg-white rounded-2xl shadow p-8"><h2 class="section-title text-green-600 border-green-500">ผลสัมฤทธิ์ O-NET</h2><div id="onet-container"></div></div></section>
             <section id="page-academic-nt" class="page-content hidden"><div class="bg-white rounded-2xl shadow p-8"><h2 class="section-title text-blue-600 border-blue-500">ผลสัมฤทธิ์ NT</h2><div id="nt-container"></div></div></section>

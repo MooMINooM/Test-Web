@@ -126,91 +126,79 @@
             
             <section id="page-home" class="page-content">
     
- <div class="relative overflow-hidden rounded-[3rem] bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-10 md:p-14 text-white shadow-xl shadow-indigo-200/50 mb-6 animate-fade-in group">
-    <div class="absolute top-0 right-0 w-96 h-96 bg-white opacity-5 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3 group-hover:scale-110 transition duration-[2s] pointer-events-none"></div>
-    <div class="absolute bottom-0 left-0 w-64 h-64 bg-purple-500 opacity-20 rounded-full blur-2xl -translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
+ <section id="page-home" class="page-content">
     
-    <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
-        <div class="text-left">
-            <h2 class="text-5xl md:text-7xl font-black leading-tight tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-100 drop-shadow-sm">
-                ยินดีต้อนรับ
-            </h2>
-        </div>
-        
-        <button data-page-link="school-about" class="group/btn relative bg-white text-indigo-600 font-bold py-3.5 px-8 rounded-full hover:shadow-[0_0_30px_-5px_rgba(255,255,255,0.6)] hover:bg-blue-50 transition-all duration-300 transform hover:-translate-y-1 overflow-hidden shadow-lg shrink-0">
-            <span class="relative z-10 flex items-center gap-2 text-base">รู้จักเรา <i class="fa-solid fa-arrow-right group-hover/btn:translate-x-1 transition-transform text-sm"></i></span>
-        </button>
-    </div>
-</div>
-                
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch min-h-[450px]">
-        
-        <div class="lg:col-span-5 flex flex-col h-full animate-fade-in delay-100">
-            <div class="flex items-center gap-3 mb-4 px-2">
-                <div class="w-10 h-10 rounded-2xl bg-red-50 flex items-center justify-center text-red-500 text-xl shadow-sm"><i class="fa-brands fa-youtube"></i></div>
-                <h3 class="font-bold text-slate-700 text-lg">แนะนำโรงเรียน</h3>
-            </div>
-            <div id="vtr-container" class="bg-black rounded-[2.5rem] overflow-hidden shadow-lg relative group h-full min-h-[300px] border-4 border-white shadow-slate-200">
-                <iframe id="vtr-iframe" class="w-full h-full absolute inset-0" src="" title="School VTR" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                <div class="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center text-slate-500 gap-4" id="vtr-placeholder">
-                    <div class="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center animate-pulse"><i class="fa-solid fa-play text-2xl"></i></div>
-                    <p class="font-light tracking-widest text-xs uppercase">Loading Video...</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="lg:col-span-4 flex flex-col h-full animate-fade-in delay-200">
-            <div class="flex justify-between items-center mb-4 px-2">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-500 text-xl shadow-sm"><i class="fa-regular fa-newspaper"></i></div>
-                    <h3 class="font-bold text-slate-700 text-lg">ข่าวสารล่าสุด</h3>
-                </div>
-                <button data-page-link="news" class="text-xs font-bold text-slate-400 hover:text-blue-600 transition">ดูทั้งหมด</button>
-            </div>
-            <div class="bg-white rounded-[2.5rem] shadow-lg shadow-slate-100 border border-slate-100 p-5 h-full flex flex-col relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl opacity-50 -mr-10 -mt-10 pointer-events-none"></div>
-                <div id="home-news-container" class="space-y-4 h-full overflow-y-auto pr-2 custom-scrollbar relative z-10">
-                    <div class="text-center py-20 text-slate-300 text-sm font-light">กำลังโหลดข่าวสาร...</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="lg:col-span-3 flex flex-col h-full animate-fade-in delay-300">
-            <div class="flex items-center gap-3 mb-4 px-2">
-                <div class="w-10 h-10 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 text-xl shadow-sm"><i class="fa-solid fa-grid-2"></i></div>
-                <h3 class="font-bold text-slate-700 text-lg">เมนูด่วน</h3>
+    <div class="relative overflow-hidden rounded-[3rem] bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 md:p-8 text-white shadow-xl mb-6 animate-fade-in group">
+        <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="text-left">
+                <h2 class="text-4xl md:text-5xl font-black leading-tight tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-100 drop-shadow-sm">
+                    ยินดีต้อนรับ
+                </h2>
+                <p class="text-blue-100 text-base md:text-lg font-medium mt-1 opacity-80">สู่พื้นที่แห่งการเรียนรู้และการสร้างสรรค์</p>
             </div>
             
-            <div class="grid grid-cols-2 gap-4 h-full">
-                
-                <div data-page-link="personnel-list" class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-4 flex flex-col items-center justify-center text-center gap-3 cursor-pointer hover:shadow-lg hover:border-purple-200 hover:-translate-y-1 transition duration-500 group h-full">
-                    <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-500 flex items-center justify-center text-2xl group-hover:scale-110 group-hover:rotate-6 transition duration-500 shadow-inner">
-                        <i class="fa-solid fa-user-tie"></i>
+            <button data-page-link="school-about" class="bg-white text-indigo-600 font-bold py-2.5 px-8 rounded-full shadow-lg shrink-0 transition-transform hover:-translate-y-1">
+                <span class="flex items-center gap-2 text-sm">รู้จักเรา <i class="fa-solid fa-arrow-right text-xs"></i></span>
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch min-h-[350px]">
+        
+        <div class="lg:col-span-5 flex flex-col h-full">
+            <div class="flex items-center gap-2 mb-2 px-2">
+                <div class="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center text-red-500 text-base shadow-sm"><i class="fa-brands fa-youtube"></i></div>
+                <h3 class="font-bold text-slate-700 text-base">แนะนำโรงเรียน</h3>
+            </div>
+            <div id="vtr-container" class="bg-black rounded-[2rem] overflow-hidden shadow-lg relative group h-full min-h-[280px] border-4 border-white">
+                <iframe id="vtr-iframe" class="w-full h-full absolute inset-0" src="" title="School VTR" frameborder="0" allowfullscreen></iframe>
+                <div class="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center text-slate-500 gap-3" id="vtr-placeholder">
+                    <i class="fa-solid fa-play text-xl"></i>
+                    <p class="text-[10px] uppercase tracking-widest">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-4 flex flex-col h-full">
+            <div class="flex justify-between items-center mb-2 px-2">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 text-base shadow-sm"><i class="fa-regular fa-newspaper"></i></div>
+                    <h3 class="font-bold text-slate-700 text-base">ข่าวสารล่าสุด</h3>
+                </div>
+                <button data-page-link="news" class="text-[10px] font-bold text-slate-400 hover:text-blue-600 transition">ทั้งหมด</button>
+            </div>
+            <div class="bg-white rounded-[2rem] shadow-lg border border-slate-100 p-4 h-full flex flex-col overflow-hidden">
+                <div id="home-news-container" class="space-y-3 h-full overflow-y-auto pr-1 custom-scrollbar">
                     </div>
-                    <span class="text-sm font-bold text-slate-600 group-hover:text-purple-600">บุคลากร</span>
+            </div>
+        </div>
+
+        <div class="lg:col-span-3 flex flex-col h-full">
+            <div class="flex items-center gap-2 mb-2 px-2">
+                <div class="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500 text-base shadow-sm"><i class="fa-solid fa-grid-2"></i></div>
+                <h3 class="font-bold text-slate-700 text-base">เมนูด่วน</h3>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3 h-full">
+                <div data-page-link="personnel-list" class="bg-white rounded-[1.5rem] shadow-sm border border-slate-50 p-3 flex flex-col items-center justify-center text-center gap-2 cursor-pointer hover:shadow-md hover:-translate-y-1 transition duration-500 group">
+                    <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-500 flex items-center justify-center text-xl group-hover:scale-110 transition shadow-inner"><i class="fa-solid fa-user-tie"></i></div>
+                    <span class="text-[11px] font-bold text-slate-600">บุคลากร</span>
                 </div>
 
-                <div data-page-link="students" class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-4 flex flex-col items-center justify-center text-center gap-3 cursor-pointer hover:shadow-lg hover:border-pink-200 hover:-translate-y-1 transition duration-500 group h-full">
-                    <div class="w-14 h-14 rounded-2xl bg-pink-50 text-pink-500 flex items-center justify-center text-2xl group-hover:scale-110 group-hover:rotate-6 transition duration-500 shadow-inner">
-                        <i class="fa-solid fa-child-reaching"></i>
-                    </div>
-                    <span class="text-sm font-bold text-slate-600 group-hover:text-pink-600">นักเรียน</span>
+                <div data-page-link="students" class="bg-white rounded-[1.5rem] shadow-sm border border-slate-50 p-3 flex flex-col items-center justify-center text-center gap-2 cursor-pointer hover:shadow-md hover:-translate-y-1 transition duration-500 group">
+                    <div class="w-12 h-12 rounded-2xl bg-pink-50 text-pink-500 flex items-center justify-center text-xl group-hover:scale-110 transition shadow-inner"><i class="fa-solid fa-child-reaching"></i></div>
+                    <span class="text-[11px] font-bold text-slate-600">นักเรียน</span>
                 </div>
 
-                <div data-page-link="documents-official" class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-4 flex flex-col items-center justify-center text-center gap-3 cursor-pointer hover:shadow-lg hover:border-red-200 hover:-translate-y-1 transition duration-500 group h-full">
-                    <div class="w-14 h-14 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center text-2xl group-hover:scale-110 group-hover:rotate-6 transition duration-500 shadow-inner">
-                        <i class="fa-solid fa-file-pdf"></i>
-                    </div>
-                    <span class="text-sm font-bold text-slate-600 group-hover:text-red-600">เอกสาร</span>
+                <div data-page-link="documents-official" class="bg-white rounded-[1.5rem] shadow-sm border border-slate-50 p-3 flex flex-col items-center justify-center text-center gap-2 cursor-pointer hover:shadow-md hover:-translate-y-1 transition duration-500 group">
+                    <div class="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center text-xl group-hover:scale-110 transition shadow-inner"><i class="fa-solid fa-file-pdf"></i></div>
+                    <span class="text-[11px] font-bold text-slate-600">เอกสาร</span>
                 </div>
 
-                <div data-page-link="innovations" class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-4 flex flex-col items-center justify-center text-center gap-3 cursor-pointer hover:shadow-lg hover:border-yellow-200 hover:-translate-y-1 transition duration-500 group h-full">
-                    <div class="w-14 h-14 rounded-2xl bg-yellow-50 text-yellow-500 flex items-center justify-center text-2xl group-hover:scale-110 group-hover:rotate-6 transition duration-500 shadow-inner">
-                        <i class="fa-solid fa-lightbulb"></i>
-                    </div>
-                    <span class="text-sm font-bold text-slate-600 group-hover:text-yellow-600">นวัตกรรม</span>
+                <div data-page-link="innovations" class="bg-white rounded-[1.5rem] shadow-sm border border-slate-50 p-3 flex flex-col items-center justify-center text-center gap-2 cursor-pointer hover:shadow-md hover:-translate-y-1 transition duration-500 group">
+                    <div class="w-12 h-12 rounded-2xl bg-yellow-50 text-yellow-500 flex items-center justify-center text-xl group-hover:scale-110 transition shadow-inner"><i class="fa-solid fa-lightbulb"></i></div>
+                    <span class="text-[11px] font-bold text-slate-600">นวัตกรรม</span>
                 </div>
-
             </div>
         </div>
 

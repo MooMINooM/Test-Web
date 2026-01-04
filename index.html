@@ -486,7 +486,26 @@
             <section id="page-students" class="page-content hidden"><div class="bg-white rounded-2xl shadow p-8"><h2 class="section-title">ข้อมูลนักเรียน</h2><div id="student-summary-container" class="grid grid-cols-1 md:grid-cols-3 gap-4 my-6"></div><div class="h-[400px]"><canvas id="studentChart"></canvas></div></div></section>
             <section id="page-personnel-history" class="page-content hidden"><div class="bg-white p-8 rounded-2xl shadow"><h2 class="section-title">ทำเนียบบุคลากร</h2><div class="overflow-x-auto mt-4"><table class="w-full"><tbody id="personnel-history-table-body"></tbody></table></div></div></section>
             
-            <section id="page-news" class="page-content hidden"><div class="bg-white rounded-2xl shadow p-8"><h2 class="section-title">ข่าวประชาสัมพันธ์</h2><input type="text" onkeyup="filterNews('s-news','news-container')" id="s-news" placeholder="ค้นหา..." class="w-full p-2 border rounded-lg mb-4 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"><div id="news-container" class="space-y-4"></div></div></section>
+            <section id="page-news" class="page-content hidden">
+    <div class="max-w-5xl mx-auto animate-fade-in pb-20">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+            <div>
+                <h2 class="text-4xl font-black text-slate-800 tracking-tight">ข่าวประชาสัมพันธ์</h2>
+                <p class="text-slate-500 mt-2">ติดตามข่าวสารและกิจกรรมล่าสุดของโรงเรียน</p>
+            </div>
+            <div class="relative group">
+                <input type="text" id="search-news" oninput="window.filterNews('search-news')" 
+                    placeholder="ค้นหาหัวข้อข่าว..." 
+                    class="w-full md:w-72 bg-white border border-slate-100 px-6 py-3.5 rounded-[1.5rem] shadow-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all duration-300">
+                <i class="fa-solid fa-magnifying-glass absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors"></i>
+            </div>
+        </div>
+
+        <div id="news-container" class="space-y-8"></div>
+
+        <div id="news-pagination" class="mt-16 flex justify-center"></div>
+    </div>
+</section>
             <section id="page-teacher-achievements" class="page-content hidden"><div class="bg-white rounded-2xl shadow p-8"><h2 class="section-title">ผลงานครู</h2><div id="teacher-achievements-container"></div></div></section>
             <section id="page-student-achievements" class="page-content hidden"><div class="bg-white rounded-2xl shadow p-8"><h2 class="section-title">ผลงานนักเรียน</h2><div id="student-achievements-container"></div></div></section>
             <section id="page-school-achievements" class="page-content hidden"><div class="bg-white rounded-2xl shadow p-8"><h2 class="section-title">ผลงานสถานศึกษา</h2><div id="school-achievements-container" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div></div></section>

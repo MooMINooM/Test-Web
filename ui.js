@@ -3,24 +3,19 @@
 // --- Global Variables ---
 let allTeacherData = [];
 let allStudentData = [];
-let allSchoolData = [];
+let allSchoolData = []; 
 let allNewsData = [];
-// ✅ เพิ่มตัวแปรเก็บข้อมูลเอกสารแยกประเภท
 let allOfficialDocs = [];
 let allFormDocs = [];
 
 // --- Config ---
-const ACH_ITEMS_PER_PAGE = 6;
-const NEWS_ITEMS_PER_PAGE = 5;
-const DOCS_ITEMS_PER_PAGE = 10;
+const ACH_ITEMS_PER_PAGE = 6;  
+const NEWS_ITEMS_PER_PAGE = 5; 
+const DOCS_ITEMS_PER_PAGE = 10; 
 
 // --- State ---
-let currentFolderFilter = null;
-// ✅ ตัวแปรเก็บสถานะโฟลเดอร์ของเอกสารแต่ละประเภท
-let currentDocFolder = {
-    official: null,
-    form: null
-};
+let currentFolderFilter = null; 
+let currentDocFolder = null;
 
 // =============================================================================
 // 1. HELPER FUNCTIONS
@@ -29,37 +24,49 @@ let currentDocFolder = {
 function getSubjectBadge(subject) {
     if (!subject) return '';
     const cleanSubject = subject.trim();
-    // (ใช้โค้ดสีเดิมของอาจารย์ได้เลยครับ)
+    // ใช้โค้ดสีเดิม
     return `<span class="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded-md border inline-flex items-center gap-1 whitespace-nowrap"><i class="fa-solid fa-tag text-[9px]"></i> ${cleanSubject}</span>`;
 }
 
 // =============================================================================
-// 2. SCHOOL INFO RENDERER (คงเดิมจากเวอร์ชันล่าสุด)
+// 2. SCHOOL INFO RENDERER (✅ ปรับปรุงใหม่: ดึงข้อมูลลง Header/Title)
 // =============================================================================
 
 export function renderSchoolInfo(info) {
     if (!info) return;
 
-    if (info.school_name) document.title = info.school_name;
+    // --- 1. อัปเดต Title ของ Browser tab ---
+    if (info.school_name) {
+        document.title = info.school_name;
+    }
 
-    // Header
-    if (document.getElementById('header-school-name')) document.getElementById('header-school-name').innerText = info.school_name || 'กำลังโหลด...';
-    if (document.getElementById('header-affiliation')) document.getElementById('header-affiliation').innerText = info.affiliation || '-';
+    // --- 2. อัปเดต Header (ส่วนหัวเว็บ) ---
+    // ชื่อโรงเรียน (ตัวใหญ่)
+    if (document.getElementById('header-school-name')) {
+        document.getElementById('header-school-name').innerText = info.school_name || 'กำลังโหลด...';
+    }
+    // สังกัด (ตัวเล็กใต้ชื่อ)
+    if (document.getElementById('header-affiliation')) {
+        document.getElementById('header-affiliation').innerText = info.affiliation || '-';
+    }
+    // โลโก้ซ้ายบน
     if (document.getElementById('header-logo') && info.logo_url) {
         const logo = document.getElementById('header-logo');
         logo.src = info.logo_url;
-        logo.classList.remove('hidden');
+        logo.classList.remove('hidden'); // โชว์รูปเมื่อโหลดเสร็จ
     }
 
-    // Content
+    // --- 3. ส่วนเนื้อหา (Home & Footer) ---
     if (document.getElementById('hero-motto')) document.getElementById('hero-motto').innerText = info.motto || '-';
     if (document.getElementById('footer-school-name')) document.getElementById('footer-school-name').innerText = info.school_name || '';
+    
+    // อายุโรงเรียน
     if (info.founding_date && document.getElementById('school-age-badge')) {
         const age = new Date().getFullYear() - new Date(info.founding_date).getFullYear();
         document.getElementById('school-age-badge').innerText = `ก่อตั้งมาแล้ว ${age} ปี`;
     }
 
-    // Basic Info Page
+    // --- 4. หน้าข้อมูลพื้นฐาน (Basic Info Page) ---
     const basicFields = {
         'info-name-th': info.school_name,
         'info-name-en': info.school_name_en,
@@ -69,32 +76,35 @@ export function renderSchoolInfo(info) {
         'info-affiliation': info.affiliation,
         'info-address': info.address
     };
+
     for (const [id, value] of Object.entries(basicFields)) {
         const el = document.getElementById(id);
         if (el) el.innerText = value || '-';
     }
 
-    // About Page
+    // --- 5. หน้าเกี่ยวกับโรงเรียน (About Page) ---
     const aboutFields = {
         'school-history-content': info.history,
         'info-vision': info.vision,
         'school-mission-content': info.mission,
         'info-philosophy': info.philosophy,
         'info-motto': info.motto,
-        'school-identity-content': info.identity,
-        'school-uniqueness-content': info.uniqueness
+        'school-identity-content': info.identity
     };
+
     for (const [id, value] of Object.entries(aboutFields)) {
         const el = document.getElementById(id);
         if (el) el.innerText = value || '-';
     }
 
+    // สีประจำโรงเรียน
     if (document.getElementById('school-color-box')) {
         const c1 = info.color_code_1 || '#ddd';
         const c2 = info.color_code_2 || c1 || '#ddd';
         document.getElementById('school-color-box').style.background = `linear-gradient(to right, ${c1} 50%, ${c2} 50%)`;
     }
 
+    // รูปเครื่องแบบ
     if (document.getElementById('student-uniform-img')) {
         const img = document.getElementById('student-uniform-img');
         const placeholder = document.getElementById('uniform-placeholder');
@@ -108,6 +118,7 @@ export function renderSchoolInfo(info) {
         }
     }
 
+    // --- 6. สื่อ (VTR & เพลง) ---
     if (info.song_url && document.getElementById('school-song')) {
         document.getElementById('school-song').src = info.song_url;
         document.getElementById('music-player-controls').classList.remove('hidden');
@@ -119,6 +130,7 @@ export function renderSchoolInfo(info) {
             if (info.vtr_url.includes('v=')) vid = info.vtr_url.split('v=')[1].split('&')[0];
             else if (info.vtr_url.includes('youtu.be/')) vid = info.vtr_url.split('youtu.be/')[1];
         } catch (e) {}
+
         if (vid) {
             document.getElementById('vtr-iframe').src = `https://www.youtube.com/embed/${vid}`;
             if(document.getElementById('vtr-placeholder')) document.getElementById('vtr-placeholder').classList.add('hidden');
@@ -202,6 +214,7 @@ function renderPagedAchievements(container, pageItemsFullList, type, page = 1) {
     const pageItems = pageItemsFullList.slice(startIndex, startIndex + ACH_ITEMS_PER_PAGE);
 
     pageItems.forEach(item => {
+        const clickAction = item.fileUrl ? `window.open('${item.fileUrl}', '_blank')` : `window.open('${item.image || '#'}', '_blank')`;
         const div = document.createElement('div');
         div.className = `bg-white rounded-xl shadow-sm hover:shadow-lg transition border border-gray-100 overflow-hidden cursor-pointer group`;
         div.onclick = () => window.open(item.fileUrl || item.image || '#', '_blank');
@@ -220,7 +233,7 @@ function renderPagedAchievements(container, pageItemsFullList, type, page = 1) {
 }
 
 // =============================================================================
-// 4. NEWS
+// 4. NEWS & DOCS
 // =============================================================================
 
 export function renderNews(data) {
@@ -250,105 +263,35 @@ export function renderNews(data) {
     });
 }
 
-// =============================================================================
-// 5. ✅ DOCUMENT SYSTEM (ระบบเอกสารแบบโฟลเดอร์) - แก้ไขใหม่
-// =============================================================================
-
-// ฟังก์ชันหลักที่ script.js จะเรียกใช้
-// type = 'official' (เอกสารราชการ) หรือ 'form' (แบบฟอร์ม)
-export function renderDocumentSystem(data, containerId, type = 'official') {
+export function renderDocuments(data, containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
     container.innerHTML = '';
     
-    // บันทึกข้อมูลลงตัวแปร Global แยกประเภท เพื่อใช้ตอนกดโฟลเดอร์
-    if(type === 'official') {
-        allOfficialDocs = data;
-    } else {
-        allFormDocs = data;
-    }
-
-    if (!data || data.length === 0) {
-        container.innerHTML = '<div class="text-center p-10 text-gray-400 bg-gray-50 rounded-xl border border-dashed"><i class="fa-solid fa-folder-open text-3xl mb-2 opacity-50"></i><p>ไม่พบเอกสาร</p></div>';
+    if(!data || data.length === 0) {
+        container.innerHTML = '<div class="text-center p-4 text-gray-400">ไม่พบเอกสาร</div>';
         return;
     }
 
-    // ตรวจสอบสถานะว่ากำลังเข้าดูโฟลเดอร์ไหน (แยกตาม type)
-    const currentFolder = currentDocFolder[type];
-
-    if (currentFolder === null) {
-        // --- 1. หน้าแรก: แสดงรายการโฟลเดอร์ (Groups by Category) ---
-        const groups = data.reduce((acc, item) => {
-            const key = item.category || 'ทั่วไป'; // ถ้าไม่มีหมวดหมู่ ให้รวมเป็น 'ทั่วไป'
-            if (!acc[key]) acc[key] = 0;
-            acc[key]++;
-            return acc;
-        }, {});
-
-        let html = '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in">';
-        for(const [catName, count] of Object.entries(groups)) {
-            html += `
-            <div onclick="window.selectDocFolder('${containerId}', '${type}', '${catName}')" 
-                 class="bg-white p-5 rounded-xl border border-gray-200 hover:border-blue-400 hover:shadow-md cursor-pointer flex flex-col items-center text-center gap-3 transition group">
-                <div class="w-14 h-14 bg-yellow-50 text-yellow-500 rounded-full flex items-center justify-center text-3xl group-hover:scale-110 transition">
-                    <i class="fa-solid fa-folder"></i>
+    data.forEach(doc => {
+        const div = document.createElement('div');
+        div.className = "flex justify-between items-center p-4 bg-white border border-gray-100 rounded-xl hover:shadow-md transition mb-2 group";
+        div.innerHTML = `
+            <div class="flex items-center gap-3 overflow-hidden">
+                <div class="w-10 h-10 rounded-lg bg-red-50 text-red-500 flex items-center justify-center shrink-0"><i class="fa-solid fa-file-pdf text-xl"></i></div>
+                <div class="truncate">
+                    <h4 class="font-bold text-gray-700 text-sm truncate group-hover:text-blue-600 transition">${doc.title}</h4>
+                    <span class="text-xs text-gray-400">${doc.category || 'ทั่วไป'}</span>
                 </div>
-                <div>
-                    <h4 class="font-bold text-gray-700 text-sm group-hover:text-blue-600 transition">${catName}</h4>
-                    <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full mt-1 inline-block">${count} ไฟล์</span>
-                </div>
-            </div>`;
-        }
-        html += '</div>';
-        container.innerHTML = html;
-
-    } else {
-        // --- 2. หน้าในโฟลเดอร์: แสดงรายการไฟล์ ---
-        const filteredDocs = data.filter(item => (item.category || 'ทั่วไป') === currentFolder);
-        
-        container.innerHTML = `
-            <div class="flex items-center justify-between mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200 animate-fade-in">
-                <h3 class="font-bold text-gray-700 flex items-center gap-2">
-                    <i class="fa-solid fa-folder-open text-yellow-500"></i> ${currentFolder}
-                </h3>
-                <button onclick="window.clearDocFolder('${containerId}', '${type}')" class="text-sm text-blue-600 font-bold hover:underline flex items-center gap-1">
-                    <i class="fa-solid fa-arrow-left"></i> ย้อนกลับ
-                </button>
             </div>
-            <div class="space-y-3 animate-fade-in">
-                ${filteredDocs.map(doc => {
-                    const dateStr = doc.uploadDate ? new Date(doc.uploadDate).toLocaleDateString('th-TH') : '-';
-                    // ไอคอนตามประเภทไฟล์
-                    let iconClass = 'fa-file-lines text-gray-400';
-                    if(doc.title.includes('.pdf')) iconClass = 'fa-file-pdf text-red-500';
-                    else if(doc.title.includes('.doc')) iconClass = 'fa-file-word text-blue-500';
-                    else if(doc.title.includes('.xls')) iconClass = 'fa-file-excel text-green-500';
-
-                    return `
-                    <div class="flex justify-between items-center p-4 bg-white border border-gray-100 rounded-xl hover:shadow-md transition group cursor-pointer" onclick="window.open('${doc.fileUrl}', '_blank')">
-                        <div class="flex items-center gap-4 overflow-hidden">
-                            <div class="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center shrink-0 text-xl group-hover:bg-white transition">
-                                <i class="fa-solid ${iconClass}"></i>
-                            </div>
-                            <div class="min-w-0">
-                                <h4 class="font-bold text-gray-700 text-sm truncate group-hover:text-blue-600 transition">${doc.title}</h4>
-                                <div class="flex gap-3 text-xs text-gray-400 mt-0.5">
-                                    <span><i class="fa-regular fa-calendar"></i> ${dateStr}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="text-gray-300 group-hover:text-blue-500 transition px-2">
-                            <i class="fa-solid fa-download"></i>
-                        </div>
-                    </div>`;
-                }).join('')}
-            </div>
+            <a href="${doc.fileUrl}" target="_blank" class="text-gray-400 hover:text-blue-600 transition px-2"><i class="fa-solid fa-download"></i></a>
         `;
-    }
+        container.appendChild(div);
+    });
 }
 
 // =============================================================================
-// 6. EXPORTS & HELPERS อื่นๆ (คงเดิม)
+// 5. EXPORTS & HELPERS
 // =============================================================================
 
 export function renderSchoolAchievements(data) { 
@@ -508,7 +451,7 @@ export function renderHomeNews(newsList) {
     } 
 }
 
-// Window Global Functions (เพื่อให้ HTML เรียกใช้งานได้)
+// Window Global Functions
 window.selectFolder = (cid, type, name) => {
     currentFolderFilter = name;
     let data = type==='teacher'?allTeacherData : (type==='student'?allStudentData : allSchoolData);
@@ -527,19 +470,6 @@ window.clearFolderFilter = (cid, type) => {
     renderAchievementSystem(cid, data, type);
 };
 
-// ✅ ฟังก์ชันจัดการ Folder ของเอกสาร (แก้ไขใหม่)
-window.selectDocFolder = (cid, type, catName) => {
-    currentDocFolder[type] = catName; // เก็บสถานะแยกตาม type
-    const data = type === 'official' ? allOfficialDocs : allFormDocs;
-    renderDocumentSystem(data, cid, type);
-};
-
-window.clearDocFolder = (cid, type) => {
-    currentDocFolder[type] = null; // รีเซ็ตสถานะแยกตาม type
-    const data = type === 'official' ? allOfficialDocs : allFormDocs;
-    renderDocumentSystem(data, cid, type);
-};
-
 window.filterNews = (id, cid) => { 
     const input = document.getElementById(id);
     const searchText = input.value.toLowerCase().trim();
@@ -551,21 +481,16 @@ window.filterDocuments = (id, cid) => {
     const input = document.getElementById(id);
     const searchText = input.value.toLowerCase().trim();
     const isOfficial = cid.includes('official');
-    const type = isOfficial ? 'official' : 'form';
     const sourceData = isOfficial ? allOfficialDocs : allFormDocs;
-    
     if (searchText) {
-        // ถ้ามีการค้นหา ให้แสดงผลลัพธ์เลย (ข้ามระบบโฟลเดอร์)
-        currentDocFolder[type] = 'ผลการค้นหา';
+        currentDocFolder = 'ผลการค้นหา';
         const filtered = sourceData.filter(item => item.title.toLowerCase().includes(searchText));
         const container = document.getElementById(cid);
-        container.innerHTML = ''; // ล้างของเก่า
-        // บังคับ render แบบ List (โดยหลอก function ว่าอยู่ใน Folder ชื่อ 'ผลการค้นหา')
-        renderDocumentSystem(filtered, cid, type);
+        container.innerHTML = '';
+        renderPagedDocs(container, filtered, isOfficial?'official':'form', 1);
     } else {
-        // ถ้าลบคำค้นหา ให้กลับไปหน้าแรก (เคลียร์โฟลเดอร์)
-        window.clearDocFolder(cid, type);
+        window.clearDocFolder(cid, isOfficial?'official':'form');
     }
 };
 
-window.filterAchievements = (id, selId, cid) => { /* Reuse logic if needed */ };
+window.filterAchievements = (id, selId, cid) => { /* Reuse logic if needed, or implement specific one */ };

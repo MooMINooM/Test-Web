@@ -701,3 +701,51 @@ window.selectFolder = (cid, type, name) => { currentFolderFilter = name; const d
 window.clearFolderFilter = (cid, type) => { currentFolderFilter = null; const data = type==='teacher'?allTeacherData : (type==='student'?allStudentData : allSchoolData); renderAchievementSystem(cid, data, type, 1); };
 window.selectDocFolder = (cid, type, catName) => { currentDocFolder[type] = catName; const data = type === 'official' ? allOfficialDocs : allFormDocs; renderDocumentSystem(data, cid, type, 1); };
 window.clearDocFolder = (cid, type) => { currentDocFolder[type] = null; const data = type === 'official' ? allOfficialDocs : allFormDocs; renderDocumentSystem(data, cid, type, 1); };
+
+// =============================================================================
+// 9. PAGINATION HANDLERS (สำคัญ: ต้องมีเพื่อให้กดหน้า 2, 3... ได้)
+// =============================================================================
+
+// ✅ ตัวจัดการการเปลี่ยนหน้าของผลงานครู
+window.pagedAch_teacher = (p) => {
+    renderAchievementSystem('teacher-achievements-container', allTeacherData, 'teacher', p);
+};
+
+// ✅ ตัวจัดการการเปลี่ยนหน้าของผลงานนักเรียน
+window.pagedAch_student = (p) => {
+    renderAchievementSystem('student-achievements-container', allStudentData, 'student', p);
+};
+
+// ✅ ตัวจัดการการเปลี่ยนหน้าของผลงานสถานศึกษา และ วิชาการ (O-NET/NT/RT)
+window.pagedAch_school = (p) => {
+    // ฟังก์ชันนี้จะจัดการรวมทั้งผลงานทั่วไปและหน้าวิชาการ
+    renderAchievementSystem('school-achievements-container', allSchoolData, 'school', p);
+    
+    // คัดกรองข้อมูลเฉพาะส่วนสำหรับหน้าวิชาการกรณีที่มีการเปลี่ยนหน้าในหน้านั้นๆ
+    const onet = allSchoolData.filter(i => (i.title + i.competition).includes('O-NET'));
+    const nt = allSchoolData.filter(i => (i.title + i.competition).includes('NT'));
+    const rt = allSchoolData.filter(i => (i.title + i.competition).includes('RT'));
+
+    if(document.getElementById('onet-container')) renderAchievementSystem('onet-container', onet, 'school', p);
+    if(document.getElementById('nt-container')) renderAchievementSystem('nt-container', nt, 'school', p);
+    if(document.getElementById('rt-container')) renderAchievementSystem('rt-container', rt, 'school', p);
+};
+
+// ✅ ตัวจัดการการเปลี่ยนหน้าของเอกสารราชการ
+window.pagedDoc_official = (p) => {
+    renderDocumentSystem(allOfficialDocs, 'documents-official-container', 'official', p);
+};
+
+// ✅ ตัวจัดการการเปลี่ยนหน้าของแบบฟอร์ม
+window.pagedDoc_form = (p) => {
+    renderDocumentSystem(allFormDocs, 'documents-forms-container', 'form', p);
+};
+
+// ✅ ฟังก์ชันตั้งค่า Dropdown และ Modal (เตรียมไว้ให้โครงสร้างสมบูรณ์)
+export function setupDropdowns() {}
+export function setupModal() {}
+export function closeAllDropdowns() { 
+    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden')); 
+}
+
+console.log("Lumina Bento UI System: Ready");

@@ -1,4 +1,4 @@
-// js/ui.js - Lumina Bento Edition (Full Stability & VTR Fixed)
+// js/ui.js - Lumina Bento Edition (Full Stability & Logo + VTR Fixed)
 
 // --- Global Variables ---
 let allTeacherData = [];
@@ -55,7 +55,7 @@ function getSubjectBadge(subject) {
 }
 
 // =============================================================================
-// 2. SCHOOL INFO RENDERER (✅ FIXED: VTR Loading Logic)
+// 2. SCHOOL INFO RENDERER (✅ FIXED: Logo & VTR Loading Logic)
 // =============================================================================
 
 export function renderSchoolInfo(dataList) {
@@ -83,11 +83,21 @@ export function renderSchoolInfo(dataList) {
         document.getElementById('hero-school-name-short').innerText = `"${shortName}"`;
     }
 
+    // --- ✅ FIXED LOGO LOGIC (แก้ปัญหาโลโก้มุมซ้ายบนหาย) ---
+    const logoHeader = document.getElementById('header-logo');
     const logoBasic = document.getElementById('header-logo-basic');
     const logoPlaceholder = document.getElementById('logo-placeholder');
-    if (logoBasic && info.logo_url) {
-        logoBasic.src = info.logo_url; logoBasic.classList.remove('hidden');
-        if(logoPlaceholder) logoPlaceholder.classList.add('hidden');
+
+    if (info.logo_url) {
+        if (logoHeader) {
+            logoHeader.src = info.logo_url;
+            logoHeader.classList.remove('hidden'); // แสดงโลโก้มุมซ้ายบน
+        }
+        if (logoBasic) {
+            logoBasic.src = info.logo_url;
+            logoBasic.classList.remove('hidden'); // แสดงโลโก้ในหน้าข้อมูลพื้นฐาน
+            if (logoPlaceholder) logoPlaceholder.classList.add('hidden');
+        }
     }
 
     if (document.getElementById('school-color-box')) {
@@ -110,7 +120,6 @@ export function renderSchoolInfo(dataList) {
 
         if (videoId) {
             document.getElementById('vtr-iframe').src = `https://www.youtube.com/embed/${videoId}`;
-            // ซ่อนตัว Placeholder ทันทีเมื่อโหลดวิดีโอสำเร็จ
             const vtrPlaceholder = document.getElementById('vtr-placeholder');
             if(vtrPlaceholder) vtrPlaceholder.classList.add('hidden');
         }
@@ -248,7 +257,7 @@ export function renderInnovations(data, page = 1) {
 }
 
 // =============================================================================
-// 6. WINDOW BRIDGES & ACTION HANDLERS (SEARCH / PAGINATION)
+// 6. WINDOW BRIDGES & ACTION HANDLERS
 // =============================================================================
 
 window.filterNews = (inputId) => {

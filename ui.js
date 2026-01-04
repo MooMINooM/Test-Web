@@ -74,21 +74,6 @@ export function renderSchoolInfo(info) {
         if (el) el.innerText = value || '-';
     }
 
-    // Logo ในหน้า Basic (✅ แก้ไข: เพิ่ม Logic Placeholder)
-    if (document.getElementById('header-logo-basic')) {
-        const logoBasic = document.getElementById('header-logo-basic');
-        const logoPlaceholder = document.getElementById('logo-placeholder');
-        
-        if (info.logo_url) {
-            logoBasic.src = info.logo_url;
-            logoBasic.classList.remove('hidden');
-            if(logoPlaceholder) logoPlaceholder.classList.add('hidden');
-        } else {
-            logoBasic.classList.add('hidden');
-            if(logoPlaceholder) logoPlaceholder.classList.remove('hidden');
-        }
-    }
-    
     // About Page
     const aboutFields = {
         'school-history-content': info.history,
@@ -137,23 +122,6 @@ export function renderSchoolInfo(info) {
         if (vid) {
             document.getElementById('vtr-iframe').src = `https://www.youtube.com/embed/${vid}`;
             if(document.getElementById('vtr-placeholder')) document.getElementById('vtr-placeholder').classList.add('hidden');
-        }
-    }
-    if (document.getElementById('school-map-container')) {
-        const mapContainer = document.getElementById('school-map-container');
-        if (info.map_embed) {
-            // ถ้ามีข้อมูลแผนที่ ให้แสดง iframe
-            mapContainer.innerHTML = info.map_embed;
-            // ปรับแต่ง iframe ให้เต็มกรอบอัตโนมัติ
-            const iframe = mapContainer.querySelector('iframe');
-            if(iframe) {
-                iframe.style.width = "100%";
-                iframe.style.height = "100%";
-                iframe.style.border = "0";
-                iframe.style.filter = "grayscale(20%)"; // ใส่ฟิลเตอร์เท่ๆ (ลบได้ถ้าไม่ชอบ)
-            }
-        } else {
-            // ถ้าไม่มี ให้ใช้ Placeholder เดิม (ไม่ต้องทำอะไร เพราะ HTML มีอยู่แล้ว)
         }
     }
 }

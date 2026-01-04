@@ -1,646 +1,688 @@
-// js/ui.js
+// js/ui.js - Lumina Bento Edition (Final Full Version)
+// Based on original structure + Lumina Design System
 
-// --- Global Variables ---
+// --- Global Variables (Data Persistence Layer) ---
 let allTeacherData = [];
 let allStudentData = [];
-let allSchoolData = []; 
+let allSchoolData = [];
 let allNewsData = [];
 let allOfficialDocs = [];
 let allFormDocs = [];
 
 // --- Config ---
-const ACH_ITEMS_PER_PAGE = 6;  
-const NEWS_ITEMS_PER_PAGE = 5; 
-const DOCS_ITEMS_PER_PAGE = 10; 
+const ACH_ITEMS_PER_PAGE = 6;
+const NEWS_ITEMS_PER_PAGE = 6;
+const DOCS_ITEMS_PER_PAGE = 6;
 
 // --- State ---
-let currentFolderFilter = null; 
-let currentDocFolder = null;
+let currentFolderFilter = null;
+let currentDocFolder = { official: null, form: null };
 
 // =============================================================================
 // 1. HELPER FUNCTIONS
 // =============================================================================
 
+// Helper: สร้างปุ่มแบ่งหน้า (Pagination) สไตล์ Lumina
+function renderPagination(containerId, totalItems, perPage, currentPage, callbackName) {
+    const totalPages = Math.ceil(totalItems / perPage);
+    const container = document.getElementById(containerId);
+    
+    // ถ้าไม่มี container หรือมีหน้าเดียว ไม่ต้องแสดง
+    if (!container) return;
+    if (totalPages <= 1) { 
+        container.innerHTML = ''; 
+        return; 
+    }
+
+    let html = `<div class="flex justify-center items-center gap-2 mt-10 animate-fade-in py-4">`;
+    
+    // ปุ่มย้อนกลับ
+    html += `<button onclick="${callbackName}(${Math.max(1, currentPage - 1)}); window.scrollTo({top:0, behavior:'smooth'})" 
+        class="w-10 h-10 rounded-full flex items-center justify-center border border-slate-100 bg-white text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}" ${currentPage === 1 ? 'disabled' : ''}>
+        <i class="fa-solid fa-chevron-left text-xs"></i>
+    </button>`;
+
+    // ปุ่มตัวเลข
+    for (let i = 1; i <= totalPages; i++) {
+        // แสดงเฉพาะ หน้าแรก, หน้าสุดท้าย, และหน้าใกล้เคียงปัจจุบัน
+        if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+            const isActive = i === currentPage;
+            html += `
+            <button onclick="${callbackName}(${i}); window.scrollTo({top:0, behavior:'smooth'})" 
+                class="w-10 h-10 rounded-2xl font-bold text-sm transition-all duration-300 shadow-sm border 
+                ${isActive 
+                    ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-transparent shadow-blue-200 scale-110' 
+                    : 'bg-white text-slate-500 border-slate-100 hover:border-blue-200 hover:text-blue-600 hover:shadow-md'}">
+                ${i}
+            </button>`;
+        } else if (i === currentPage - 2 || i === currentPage + 2) {
+            html += `<span class="text-slate-300 px-1">...</span>`;
+        }
+    }
+
+    // ปุ่มถัดไป
+    html += `<button onclick="${callbackName}(${Math.min(totalPages, currentPage + 1)}); window.scrollTo({top:0, behavior:'smooth'})" 
+        class="w-10 h-10 rounded-full flex items-center justify-center border border-slate-100 bg-white text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-all shadow-sm ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}" ${currentPage === totalPages ? 'disabled' : ''}>
+        <i class="fa-solid fa-chevron-right text-xs"></i>
+    </button>`;
+
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
 function getSubjectBadge(subject) {
     if (!subject) return '';
     const cleanSubject = subject.trim();
-    const colorMap = {
-        'คณิตศาสตร์': 'bg-red-50 text-red-600 border-red-100', 'คณิต': 'bg-red-50 text-red-600 border-red-100',
-        'วิทยาศาสตร์': 'bg-yellow-50 text-yellow-700 border-yellow-200', 'วิทย์': 'bg-yellow-50 text-yellow-700 border-yellow-200',
-        'ภาษาไทย': 'bg-pink-50 text-pink-600 border-pink-100',
-        'ภาษาอังกฤษ': 'bg-sky-50 text-sky-600 border-sky-100', 'อังกฤษ': 'bg-sky-50 text-sky-600 border-sky-100',
-        'สังคมศึกษา': 'bg-teal-50 text-teal-600 border-teal-100', 'สังคม': 'bg-teal-50 text-teal-600 border-teal-100',
-        'การงานอาชีพ': 'bg-orange-50 text-orange-600 border-orange-100', 'การงาน': 'bg-orange-50 text-orange-600 border-orange-100',
-        'สุขะ - พละ': 'bg-green-50 text-green-600 border-green-100', 'สุขะ-พละ': 'bg-green-50 text-green-600 border-green-100',
-        'ศิลปะ - ดนตรี': 'bg-indigo-50 text-indigo-600 border-indigo-100', 'ศิลปะ': 'bg-indigo-50 text-indigo-600 border-indigo-100', 'ดนตรี': 'bg-indigo-50 text-indigo-600 border-indigo-100',
-        'กิจกรรมพัฒนาผู้เรียน': 'bg-purple-50 text-purple-600 border-purple-100', 'ลูกเสือ': 'bg-purple-50 text-purple-600 border-purple-100',
-        'ปฐมวัย': 'bg-rose-50 text-rose-600 border-rose-100', 'อนุบาล': 'bg-rose-50 text-rose-600 border-rose-100',
-        'อื่นๆ': 'bg-gray-50 text-gray-600 border-gray-200'
-    };
-    const styleClass = colorMap[cleanSubject] || colorMap['อื่นๆ'];
-    return `<span class="${styleClass} text-[10px] font-bold px-2 py-0.5 rounded-md border inline-flex items-center gap-1 whitespace-nowrap"><i class="fa-solid fa-tag text-[9px]"></i> ${cleanSubject}</span>`;
+    // ใช้ Design แบบ Glassmorphism badge
+    return `<span class="bg-blue-50/80 backdrop-blur-sm text-blue-600 text-[10px] font-bold px-3 py-1 rounded-lg border border-blue-100 inline-flex items-center gap-1.5 whitespace-nowrap shadow-sm hover:bg-blue-100 transition"><i class="fa-solid fa-tag text-[9px]"></i> ${cleanSubject}</span>`;
 }
 
 // =============================================================================
-// 2. ACHIEVEMENT SYSTEM (Folder + Premium Cards)
+// 2. SCHOOL INFO RENDERER (Lumina Bento Design)
 // =============================================================================
 
-// ✅ Export ฟังก์ชันนี้ เพื่อให้ script.js เรียกใช้ได้ (ตามที่อาจารย์ต้องการ)
-export function renderAchievementSystem(containerId, data, type) {
+export function renderSchoolInfo(dataList) {
+    if (!dataList) return;
+    // รองรับทั้งแบบส่งมาเป็น Array หรือ Object เดี่ยว
+    const info = Array.isArray(dataList) ? dataList[0] : dataList;
+    if (!info) return;
+
+    if (info.school_name) document.title = info.school_name;
+
+    // Header & Hero
+    const mapping = {
+        'header-school-name': info.school_name,
+        'header-affiliation': info.affiliation,
+        'hero-motto': info.motto,
+        'info-name-th': info.school_name,
+        'info-name-en': info.school_name_en,
+        'info-school-code': info.school_code_10,
+        'info-smis-code': info.smis_code_8,
+        'info-obec-code': info.obec_code_6,
+        'info-affiliation-val': info.affiliation,
+        'info-address': info.address,
+        'school-history-content': info.history,
+        'school-mission-content': info.mission,
+        'info-vision': info.vision,
+        'info-philosophy': info.philosophy,
+        'info-motto': info.motto,
+        'school-identity-content': info.identity,
+        'school-uniqueness-content': info.uniqueness,
+        'footer-school-name': info.school_name
+    };
+
+    for (const [id, val] of Object.entries(mapping)) {
+        const el = document.getElementById(id);
+        if (el) el.innerText = val || '-';
+    }
+
+    // School Age
+    if (info.founding_date && document.getElementById('school-age-badge')) {
+        const age = new Date().getFullYear() - new Date(info.founding_date).getFullYear();
+        document.getElementById('school-age-badge').innerText = `ก่อตั้งมาแล้ว ${age} ปี`;
+    }
+
+    // Logo Logic
+    const logoHeader = document.getElementById('header-logo');
+    const logoBasic = document.getElementById('header-logo-basic');
+    const logoPlaceholder = document.getElementById('logo-placeholder');
+
+    if (info.logo_url) {
+        if (logoHeader) { logoHeader.src = info.logo_url; logoHeader.classList.remove('hidden'); }
+        if (logoBasic) { 
+            logoBasic.src = info.logo_url; 
+            logoBasic.classList.remove('hidden'); 
+            if(logoPlaceholder) logoPlaceholder.classList.add('hidden');
+        }
+    } else {
+        if (logoHeader) logoHeader.classList.add('hidden');
+        if (logoBasic) {
+            logoBasic.classList.add('hidden');
+            if(logoPlaceholder) logoPlaceholder.classList.remove('hidden');
+        }
+    }
+
+    // Colors & Media
+    if (document.getElementById('school-color-box')) {
+        const c1 = info.color_code_1 || '#3b82f6';
+        const c2 = info.color_code_2 || c1;
+        document.getElementById('school-color-box').style.background = `linear-gradient(135deg, ${c1} 50%, ${c2} 50%)`;
+    }
+
+    if (document.getElementById('student-uniform-img')) {
+        const img = document.getElementById('student-uniform-img');
+        const placeholder = document.getElementById('uniform-placeholder');
+        if (info.uniform_url) {
+            img.src = info.uniform_url;
+            img.classList.remove('hidden');
+            if(placeholder) placeholder.classList.add('hidden');
+        } else {
+            img.classList.add('hidden');
+            if(placeholder) placeholder.classList.remove('hidden');
+        }
+    }
+
+    if (info.song_url && document.getElementById('school-song')) {
+        document.getElementById('school-song').src = info.song_url;
+        document.getElementById('music-player-controls').classList.remove('hidden');
+    }
+
+    if (info.vtr_url && document.getElementById('vtr-iframe')) {
+        let vid = '';
+        try {
+            if (info.vtr_url.includes('v=')) vid = info.vtr_url.split('v=')[1].split('&')[0];
+            else if (info.vtr_url.includes('youtu.be/')) vid = info.vtr_url.split('youtu.be/')[1];
+        } catch (e) {}
+        if (vid) {
+            document.getElementById('vtr-iframe').src = `https://www.youtube.com/embed/${vid}`;
+            if(document.getElementById('vtr-placeholder')) document.getElementById('vtr-placeholder').classList.add('hidden');
+        }
+    }
+
+    if (document.getElementById('school-map-container') && info.map_embed) {
+        const mapContainer = document.getElementById('school-map-container');
+        mapContainer.innerHTML = info.map_embed;
+        const iframe = mapContainer.querySelector('iframe');
+        if(iframe) {
+            iframe.style.width = "100%";
+            iframe.style.height = "100%";
+            iframe.style.border = "0";
+            iframe.style.borderRadius = "2rem"; // Lumina rounded
+            iframe.style.filter = "grayscale(20%) contrast(1.1)";
+        }
+    }
+}
+
+// =============================================================================
+// 3. ACHIEVEMENT SYSTEM (Folder + List + Search + Pagination)
+// =============================================================================
+
+export function renderAchievementSystem(containerId, data, type, page = 1) {
     const container = document.getElementById(containerId);
     if (!container) return;
-    
-    container.className = "w-full"; 
     container.innerHTML = '';
 
     if (!data || data.length === 0) {
-        container.innerHTML = '<div class="col-span-full text-center py-16 text-gray-400 bg-gray-50 rounded-2xl border border-dashed border-gray-200"><i class="fa-solid fa-folder-open text-4xl mb-4 opacity-50"></i><p>ไม่พบข้อมูล</p></div>';
+        container.innerHTML = `<div class="col-span-full text-center py-20 bg-white/50 backdrop-blur rounded-[2.5rem] border border-dashed border-slate-200 text-slate-400 font-medium">ยังไม่มีข้อมูลผลงาน</div>`;
         return;
     }
 
-    // ถ้ามีการกรอง Folder หรือไม่
-    // สำหรับหน้า academic (O-NET/NT/RT) เราบังคับให้แสดง Folder ปีการศึกษาเสมอ
     if (currentFolderFilter === null) {
-        renderFolders(containerId, data, type);
-    } else {
-        const filteredData = data.filter(item => (item.competition || 'รายการอื่นๆ') === currentFolderFilter);
-        
-        const backBtnContainer = document.createElement('div');
-        backBtnContainer.className = "w-full mb-6 animate-fade-in";
-        backBtnContainer.innerHTML = `
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                <div>
-                    <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-                        <i class="fa-solid fa-folder-open text-yellow-500"></i> ${currentFolderFilter}
-                    </h3>
-                    <p class="text-xs text-gray-500 mt-1 pl-7">พบข้อมูล ${filteredData.length} รายการ</p>
-                </div>
-                <button onclick="clearFolderFilter('${containerId}', '${type}')" class="flex items-center justify-center gap-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition font-bold text-sm bg-white px-5 py-2.5 rounded-full border border-gray-200 shadow-sm w-full md:w-auto">
-                    <i class="fa-solid fa-arrow-left"></i> ย้อนกลับ
-                </button>
-            </div>
-        `;
-        container.appendChild(backBtnContainer);
+        // --- VIEW 1: FOLDERS (Lumina Style) ---
+        const groups = data.reduce((acc, item) => {
+            const key = item.competition || 'รายการอื่นๆ';
+            if (!acc[key]) acc[key] = { count: 0, latestImage: item.image };
+            acc[key].count++;
+            if(!acc[key].latestImage && item.image) acc[key].latestImage = item.image;
+            return acc;
+        }, {});
 
-        renderPagedAchievements(container, filteredData, type, 1);
-    }
-}
+        const grid = document.createElement('div');
+        grid.className = "grid grid-cols-2 md:grid-cols-4 gap-6 animate-fade-in";
 
-function renderFolders(containerId, data, type) {
-    const container = document.getElementById(containerId);
-    
-    // จัดกลุ่มตามชื่อ Competition (ซึ่งเราใช้เป็นชื่อปี หรือชื่อรายการ)
-    const groups = data.reduce((acc, item) => {
-        const key = item.competition || 'รายการอื่นๆ';
-        if (!acc[key]) { acc[key] = { count: 0, items: [], latestImage: null, dates: [] }; }
-        acc[key].count++; acc[key].items.push(item);
-        if (!acc[key].latestImage && item.image) acc[key].latestImage = item.image;
-        if (item.date) acc[key].dates.push(new Date(item.date));
-        return acc;
-    }, {});
-
-    const themeColor = type === 'teacher' ? 'blue' : (type === 'school' ? 'orange' : 'pink');
-    
-    const gridDiv = document.createElement('div');
-    gridDiv.className = "w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6";
-
-    Object.keys(groups).forEach(competitionName => {
-        const group = groups[competitionName];
-        let dateLabel = 'ไม่ระบุวันที่';
-        if(group.dates.length > 0) {
-            const maxDate = new Date(Math.max.apply(null, group.dates));
-            dateLabel = maxDate.toLocaleDateString('th-TH', { month: 'short', year: '2-digit' });
-        }
-
-        const folderDiv = document.createElement('div');
-        folderDiv.className = `bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-lg hover:border-${themeColor}-300 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col h-full animate-fade-in group relative overflow-hidden`;
-        folderDiv.onclick = () => selectFolder(containerId, type, competitionName);
-
-        folderDiv.innerHTML = `
-            <div class="absolute top-0 right-0 w-24 h-24 bg-${themeColor}-50 rounded-bl-full -mr-4 -mt-4 transition group-hover:scale-110"></div>
-            <div class="relative z-10 flex items-start gap-4">
-                <div class="w-16 h-16 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-3xl flex-shrink-0 group-hover:scale-105 transition duration-300 overflow-hidden relative">
+        Object.keys(groups).forEach(name => {
+            const group = groups[name];
+            const div = document.createElement('div');
+            // Design: Card with soft shadow and hover effect
+            div.className = "group bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-10px_rgba(59,130,246,0.15)] hover:border-blue-200 hover:-translate-y-2 transition-all duration-500 cursor-pointer text-center relative overflow-hidden h-full flex flex-col items-center justify-center";
+            div.onclick = () => window.selectFolder(containerId, type, name);
+            
+            div.innerHTML = `
+                <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-blue-50 to-transparent rounded-bl-full -mr-10 -mt-10 opacity-50 group-hover:scale-125 transition duration-700"></div>
+                
+                <div class="w-20 h-20 bg-white rounded-[1.5rem] flex items-center justify-center text-4xl text-blue-500 mx-auto mb-4 shadow-sm border border-blue-50 group-hover:scale-110 group-hover:rotate-6 transition duration-500 overflow-hidden relative">
                     ${group.latestImage 
-                        ? `<img src="${group.latestImage}" class="w-full h-full object-cover object-top">` 
-                        : `<i class="fa-solid fa-folder-closed text-${themeColor}-200"></i>`
+                        ? `<img src="${group.latestImage}" class="w-full h-full object-cover opacity-90 group-hover:opacity-100">` 
+                        : `<i class="fa-solid fa-folder-open"></i>`
                     }
                 </div>
-                <div class="flex-1 min-w-0 pt-1">
-                    <h4 class="font-bold text-gray-800 text-lg leading-tight mb-2 line-clamp-2 group-hover:text-${themeColor}-600 transition">${competitionName}</h4>
-                    <div class="flex items-center gap-3 text-xs text-gray-500">
-                        <span class="bg-${themeColor}-50 text-${themeColor}-600 px-2 py-0.5 rounded-full font-bold border border-${themeColor}-100">${group.count} รายการ</span>
-                        <span><i class="fa-regular fa-calendar mr-1"></i>${dateLabel}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center text-xs text-gray-400 group-hover:text-${themeColor}-500 transition">
-                <span>คลิกเพื่อเปิดดู</span><i class="fa-solid fa-arrow-right-long transform group-hover:translate-x-1 transition"></i>
-            </div>
-        `;
-        gridDiv.appendChild(folderDiv);
-    });
-    container.appendChild(gridDiv);
-}
-
-function renderPagedAchievements(container, pageItemsFullList, type, page = 1) {
-    let gridWrapper = container.querySelector('.achievements-grid-wrapper');
-    if (!gridWrapper) {
-        gridWrapper = document.createElement('div');
-        gridWrapper.className = "achievements-grid-wrapper w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6";
-        container.appendChild(gridWrapper);
-    } else {
-        gridWrapper.innerHTML = ''; 
-    }
-
-    const oldPag = container.querySelector('.pagination-controls');
-    if(oldPag) oldPag.remove();
-
-    const totalItems = pageItemsFullList.length;
-    const totalPages = Math.ceil(totalItems / ACH_ITEMS_PER_PAGE);
-    if (page < 1) page = 1;
-    if (page > totalPages) page = totalPages;
-
-    const startIndex = (page - 1) * ACH_ITEMS_PER_PAGE;
-    const endIndex = startIndex + ACH_ITEMS_PER_PAGE;
-    const pageItems = pageItemsFullList.slice(startIndex, endIndex);
-
-    pageItems.forEach(item => {
-        const dateStr = item.date ? new Date(item.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '-';
-        const name = type === 'teacher' ? item.name : (type === 'student' ? item.students : 'โรงเรียน');
-        const themeColor = type === 'teacher' ? 'blue' : (type === 'school' ? 'orange' : 'pink');
-        const iconClass = type === 'teacher' ? 'fa-chalkboard-user' : (type === 'student' ? 'fa-user-graduate' : 'fa-school');
-
-        // กรณีเป็นไฟล์ (O-NET/NT/RT) ให้กดแล้วเปิดลิงก์
-        // กรณีเป็นผลงานทั่วไป ให้เปิดรูป
-        const clickAction = item.fileUrl ? `window.open('${item.fileUrl}', '_blank')` : `window.open('${item.image || '#'}', '_blank')`;
-        const btnText = item.fileUrl ? 'ดาวน์โหลด/ดูไฟล์' : 'ดูเกียรติบัตร';
-        const btnIcon = item.fileUrl ? 'fa-file-pdf' : 'fa-eye';
-
-        const div = document.createElement('div');
-        div.className = `achievement-card group bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col h-full animate-fade-in w-full`;
-        
-        div.innerHTML = `
-            <div class="h-60 bg-gray-50 relative overflow-hidden cursor-pointer border-b border-gray-100" onclick="${clickAction}">
-                 ${item.image 
-                    ? `<img src="${item.image}" class="w-full h-full object-cover object-top transition duration-700 group-hover:scale-105">` 
-                    : `<div class="w-full h-full flex flex-col items-center justify-center text-gray-300"><i class="fa-solid fa-file-contract text-5xl mb-2 opacity-50"></i><span class="text-xs">เอกสาร</span></div>`
-                 }
-                 <div class="absolute inset-0 bg-black/0 transition duration-300 group-hover:bg-black/5"></div>
-                 <div class="absolute top-3 right-3">
-                    ${item.level ? `<span class="bg-white/95 backdrop-blur text-gray-600 text-[10px] font-bold px-2 py-1 rounded-full shadow-sm border border-gray-200">${item.level}</span>` : ''}
-                 </div>
-            </div>
-
-            <div class="p-5 flex-grow flex flex-col justify-between relative">
-                <div>
-                    <div class="flex flex-wrap gap-2 mb-3">
-                        ${item.competition ? `<span class="bg-yellow-50 text-yellow-700 border-yellow-200 text-[10px] font-bold px-2 py-0.5 rounded-md border inline-flex items-center gap-1"><i class="fa-solid fa-trophy text-yellow-500"></i> ${item.competition}</span>` : ''}
-                        ${getSubjectBadge(item.subject)}
-                    </div>
-                    
-                    <h4 class="font-bold text-gray-800 text-lg leading-snug mb-1 group-hover:text-${themeColor}-600 transition-colors cursor-pointer" onclick="${clickAction}" title="${item.title}">
-                        ${item.title || '-'}
-                    </h4>
-
-                    <p class="text-xs text-gray-500 mb-4 flex items-center gap-1">
-                        <i class="fa-solid fa-tag text-gray-300"></i> ${item.program || '-'}
-                    </p>
-                </div>
                 
-                <div class="mt-auto pt-3 border-t border-gray-50">
-                    <div class="flex items-center gap-2 mb-2">
-                        <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 text-xs flex-shrink-0">
-                            <i class="fa-solid ${iconClass}"></i>
-                        </div>
-                        <span class="text-sm font-bold text-gray-800 truncate flex-1">${name}</span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between text-[10px] text-gray-400">
-                        <div class="flex items-center gap-1 truncate max-w-[50%]" title="${item.organization}">
-                            <i class="fa-solid fa-building"></i> ${item.organization || '-'}
-                        </div>
-                        <div class="flex items-center gap-3 flex-shrink-0">
-                            <span><i class="fa-regular fa-calendar"></i> ${dateStr}</span>
-                            <a href="javascript:void(0)" onclick="${clickAction}" class="text-${themeColor}-600 hover:text-${themeColor}-700 hover:underline font-bold flex items-center gap-1 transition">
-                                <i class="fa-solid ${btnIcon}"></i> ${btnText}
-                            </a>
-                        </div>
-                    </div>
+                <h4 class="font-bold text-slate-700 text-sm md:text-base line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors w-full px-2">${name}</h4>
+                
+                <div class="mt-3">
+                    <span class="text-[10px] font-black text-blue-400 uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-full border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-500">${group.count} รายการ</span>
                 </div>
-            </div>
-        `;
-        gridWrapper.appendChild(div);
-    });
-
-    if (totalPages > 1) {
-        renderAchPagination(container, totalPages, page, type, pageItemsFullList);
-    }
-}
-
-function renderAchPagination(container, totalPages, currentPage, type, currentFilteredData) {
-    const nav = document.createElement('div');
-    nav.className = "pagination-controls w-full flex justify-center items-center gap-1.5 mt-6 pt-4 border-t border-gray-100";
-    const themeColor = type === 'teacher' ? 'blue' : (type === 'school' ? 'orange' : 'pink');
-    
-    const createBtn = (label, targetPage, isActive = false, isDisabled = false) => {
-        const btn = document.createElement('button');
-        btn.innerHTML = label;
-        btn.className = `w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition ${isActive ? `bg-${themeColor}-600 text-white shadow-md` : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`;
-        if (!isDisabled && !isActive) {
-            btn.onclick = () => {
-                renderPagedAchievements(container, currentFilteredData, type, targetPage);
-                const headerOffset = 150;
-                const elementPosition = container.getBoundingClientRect().top;
-                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                window.scrollTo({ top: offsetPosition, behavior: "smooth" });
-            };
-        }
-        return btn;
-    };
-    nav.appendChild(createBtn('<i class="fa-solid fa-chevron-left"></i>', currentPage - 1, false, currentPage === 1));
-    for (let i = 1; i <= totalPages; i++) {
-        if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
-            nav.appendChild(createBtn(i, i, i === currentPage));
-        } else if (i === currentPage - 2 || i === currentPage + 2) {
-            nav.appendChild(document.createTextNode("..."));
-        }
-    }
-    nav.appendChild(createBtn('<i class="fa-solid fa-chevron-right"></i>', currentPage + 1, false, currentPage === totalPages));
-    container.appendChild(nav);
-}
-
-// System Actions
-window.selectFolder = function(containerId, type, programName) {
-    currentFolderFilter = programName;
-    
-    // ตรวจสอบว่ากำลังดูข้อมูลชุดไหน
-    let data = [];
-    if(type === 'teacher') data = allTeacherData;
-    else if(type === 'student') data = allStudentData;
-    else if(type === 'school') {
-        // ต้องกรองให้ถูกชุด (O-NET หรือ NT หรือ RT)
-        if(containerId.includes('onet')) {
-            data = allSchoolData.filter(item => item.title.includes('O-NET') || item.competition.includes('O-NET'));
-        } else if(containerId.includes('nt')) {
-            data = allSchoolData.filter(item => item.title.includes('NT') || item.competition.includes('NT'));
-        } else if(containerId.includes('rt')) {
-            data = allSchoolData.filter(item => item.title.includes('RT') || item.competition.includes('RT'));
-        } else {
-            // ผลงานโรงเรียนทั่วไป
-            data = allSchoolData.filter(item => !item.title.includes('O-NET') && !item.title.includes('NT') && !item.title.includes('RT'));
-        }
-    }
-
-    renderAchievementSystem(containerId, data, type);
-    const el = document.getElementById(containerId);
-    if(el) { const offset = 120; window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' }); }
-}
-
-window.clearFolderFilter = function(containerId, type) {
-    currentFolderFilter = null;
-    
-    let data = [];
-    if(type === 'teacher') data = allTeacherData;
-    else if(type === 'student') data = allStudentData;
-    else if(type === 'school') {
-        if(containerId.includes('onet')) data = allSchoolData.filter(item => item.title.includes('O-NET') || item.competition.includes('O-NET'));
-        else if(containerId.includes('nt')) data = allSchoolData.filter(item => item.title.includes('NT') || item.competition.includes('NT'));
-        else if(containerId.includes('rt')) data = allSchoolData.filter(item => item.title.includes('RT') || item.competition.includes('RT'));
-        else data = allSchoolData.filter(item => !item.title.includes('O-NET') && !item.title.includes('NT') && !item.title.includes('RT'));
-    }
-
-    renderAchievementSystem(containerId, data, type);
-}
-
-window.filterAchievements = function(inputId, selectId, containerId) {
-    const input = document.getElementById(inputId);
-    const select = document.getElementById(selectId);
-    const searchText = input.value.toLowerCase().trim();
-    const filterLevel = select.value;
-    
-    let sourceData = [];
-    let type = 'student';
-    
-    if (containerId.includes('teacher')) { sourceData = allTeacherData; type = 'teacher'; }
-    else if (containerId.includes('student')) { sourceData = allStudentData; type = 'student'; }
-    else if (containerId.includes('school') || containerId.includes('onet') || containerId.includes('nt') || containerId.includes('rt')) { 
-        sourceData = allSchoolData; 
-        type = 'school';
-        
-        // Filter sub-sets
-        if(containerId.includes('onet')) sourceData = sourceData.filter(item => item.title.includes('O-NET') || item.competition.includes('O-NET'));
-        else if(containerId.includes('nt')) sourceData = sourceData.filter(item => item.title.includes('NT') || item.competition.includes('NT'));
-        else if(containerId.includes('rt')) sourceData = sourceData.filter(item => item.title.includes('RT') || item.competition.includes('RT'));
-        else sourceData = sourceData.filter(item => !item.title.includes('O-NET') && !item.title.includes('NT') && !item.title.includes('RT'));
-    }
-
-    if (searchText || filterLevel !== 'all') {
-        currentFolderFilter = 'ผลการค้นหา'; 
-        const filteredData = sourceData.filter(item => {
-            const textContent = `${item.title} ${item.program} ${item.competition} ${item.subject} ${item.name || item.students} ${item.organization}`.toLowerCase();
-            const itemLevel = item.level || "";
-            const matchText = !searchText || textContent.includes(searchText);
-            const matchLevel = (filterLevel === "all") || (itemLevel === filterLevel);
-            return matchText && matchLevel;
+            `;
+            grid.appendChild(div);
         });
-        const container = document.getElementById(containerId);
-        container.className = "w-full"; container.innerHTML = ''; 
-        const backBtnContainer = document.createElement('div');
-        backBtnContainer.className = "w-full mb-4"; 
-        backBtnContainer.innerHTML = `<button onclick="clearFolderFilter('${containerId}', '${type}')" class="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition font-bold text-sm bg-gray-100 px-4 py-2 rounded-full"><i class="fa-solid fa-times"></i> ล้างการค้นหา / กลับหน้าหลัก</button>`;
-        container.appendChild(backBtnContainer);
-        renderPagedAchievements(container, filteredData, type, 1);
+        container.appendChild(grid);
+
     } else {
-        clearFolderFilter(containerId, type);
-    }
-}
+        // --- VIEW 2: ITEMS IN FOLDER (Detailed Card + Pagination) ---
+        const filtered = data.filter(item => (item.competition || 'รายการอื่นๆ') === currentFolderFilter);
+        const start = (page - 1) * ACH_ITEMS_PER_PAGE;
+        const items = filtered.slice(start, start + ACH_ITEMS_PER_PAGE);
 
-// =============================================================================
-// 3. NEWS, DOCS & EXPORTS
-// =============================================================================
-
-window.filterNews = function(inputId, containerId) {
-    const input = document.getElementById(inputId);
-    const searchText = input.value.toLowerCase().trim();
-    const filteredNews = allNewsData.filter(item => !searchText || item.title.toLowerCase().includes(searchText));
-    renderPagedNews(containerId, filteredNews, 1);
-}
-
-function renderPagedNews(containerId, data, page = 1) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    container.innerHTML = '';
-
-    if (!data || data.length === 0) {
-        container.innerHTML = '<div class="text-center p-10 bg-gray-50 rounded-xl text-gray-500 border border-dashed border-gray-200"><i class="fa-regular fa-newspaper text-3xl mb-2 opacity-50"></i><p>ไม่พบข่าวสาร</p></div>';
-        return;
-    }
-
-    const totalItems = data.length;
-    const totalPages = Math.ceil(totalItems / NEWS_ITEMS_PER_PAGE);
-    if (page < 1) page = 1;
-    if (page > totalPages) page = totalPages;
-
-    const startIndex = (page - 1) * NEWS_ITEMS_PER_PAGE;
-    const endIndex = startIndex + NEWS_ITEMS_PER_PAGE;
-    const pageItems = data.slice(startIndex, endIndex);
-
-    pageItems.forEach(news => {
-        const dateStr = news.date ? new Date(news.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
-        const linkTarget = (news.link && news.link !== '#') ? `href="${news.link}" target="_blank"` : 'href="javascript:void(0)" style="cursor: default;"';
-        
-        const div = document.createElement('div');
-        div.className = "bg-white border border-gray-100 rounded-xl p-4 shadow-sm hover:shadow-md transition flex flex-col md:flex-row gap-4 animate-fade-in group";
-        
-        div.innerHTML = `
-            <div class="md:w-1/4 flex-shrink-0">
-                <div class="aspect-video bg-gray-100 rounded-lg overflow-hidden relative border border-gray-100">
-                    ${news.image ? `<img src="${news.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">` : `<div class="w-full h-full flex items-center justify-center text-gray-300"><i class="fa-regular fa-image text-3xl"></i></div>`}
-                </div>
-            </div>
-            <div class="flex-1 flex flex-col justify-between py-1">
-                <div>
-                    <a ${linkTarget} class="text-lg font-bold text-gray-800 hover:text-blue-600 transition line-clamp-2 mb-2 group-hover:text-blue-600">${news.title}</a>
-                    <div class="text-sm text-gray-500 mb-3 flex items-center gap-2"><i class="fa-regular fa-calendar text-blue-400"></i> ${dateStr}</div>
-                </div>
-                <div class="text-right mt-2 md:mt-0">
-                     ${(news.link && news.link !== '#') ? `<a href="${news.link}" target="_blank" class="text-blue-600 text-sm font-bold hover:underline inline-flex items-center gap-1">อ่านต่อ <i class="fa-solid fa-arrow-right"></i></a>` : ''}
-                </div>
-            </div>
-        `;
-        container.appendChild(div);
-    });
-
-    if (totalPages > 1) renderNewsPagination(container, totalPages, page, data);
-}
-
-function renderNewsPagination(container, totalPages, currentPage, currentFilteredData) {
-    const nav = document.createElement('div');
-    nav.className = "col-span-full flex justify-center items-center gap-2 mt-6 pt-4 border-t border-gray-100";
-    const createBtn = (label, targetPage, isActive = false, isDisabled = false) => {
-        const btn = document.createElement('button');
-        btn.innerHTML = label;
-        btn.className = `w-9 h-9 flex items-center justify-center rounded-full text-sm font-bold transition ${isActive ? 'bg-blue-600 text-white shadow-md' : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`;
-        if (!isDisabled && !isActive) {
-            btn.onclick = () => {
-                renderPagedNews(container.id, currentFilteredData, targetPage);
-                const offset = 120;
-                window.scrollTo({ top: container.closest('section').getBoundingClientRect().top + window.pageYOffset - offset, behavior: "smooth" });
-            };
-        }
-        return btn;
-    };
-    nav.appendChild(createBtn('<i class="fa-solid fa-chevron-left"></i>', currentPage - 1, false, currentPage === 1));
-    for (let i = 1; i <= totalPages; i++) {
-        if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) nav.appendChild(createBtn(i, i, i === currentPage));
-        else if (i === currentPage - 2 || i === currentPage + 2) nav.appendChild(document.createTextNode("..."));
-    }
-    nav.appendChild(createBtn('<i class="fa-solid fa-chevron-right"></i>', currentPage + 1, false, currentPage === totalPages));
-    container.appendChild(nav);
-}
-
-window.filterDocuments = function(inputId, containerId) {
-    const input = document.getElementById(inputId);
-    const searchText = input.value.toLowerCase().trim();
-    const isOfficial = containerId.includes('official');
-    const sourceData = isOfficial ? allOfficialDocs : allFormDocs;
-    const type = isOfficial ? 'official' : 'form';
-
-    if (searchText) {
-        currentDocFolder = 'ผลการค้นหา';
-        const filteredData = sourceData.filter(item => `${item.title} ${item.category}`.toLowerCase().includes(searchText));
-        const container = document.getElementById(containerId);
-        container.innerHTML = '';
-        const backBtn = document.createElement('div');
-        backBtn.className = "col-span-full mb-4 w-full";
-        backBtn.innerHTML = `<button onclick="clearDocFolder('${containerId}', '${type}')" class="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition font-bold text-sm bg-gray-100 px-4 py-2 rounded-full"><i class="fa-solid fa-times"></i> ล้างการค้นหา</button>`;
-        container.appendChild(backBtn);
-        renderPagedDocs(container, filteredData, type, 1);
-    } else {
-        clearDocFolder(containerId, type);
-    }
-}
-
-function renderDocumentSystem(containerId, data, type) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    container.className = "w-full"; 
-    container.innerHTML = '';
-
-    if (!data || data.length === 0) {
-        container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200"><i class="fa-solid fa-folder-open text-3xl mb-2 opacity-50"></i><p>ไม่พบเอกสาร</p></div>';
-        return;
-    }
-
-    if (currentDocFolder === null) {
-        renderDocFolders(container, data, type);
-    } else {
-        const filteredData = data.filter(item => (item.category || 'อื่นๆ') === currentDocFolder);
+        // Header with Back Button
         const header = document.createElement('div');
-        header.className = "w-full mb-6 animate-fade-in";
+        header.className = "flex flex-col sm:flex-row items-center justify-between bg-white/80 backdrop-blur-sm p-5 rounded-[2rem] border border-slate-100 shadow-sm mb-10 gap-4 animate-fade-in";
         header.innerHTML = `
-            <div class="flex items-center justify-between bg-gray-50 p-4 rounded-xl border border-gray-100">
-                <h3 class="font-bold text-gray-700 flex items-center gap-2"><i class="fa-solid fa-folder-open text-yellow-500"></i> ${currentDocFolder}</h3>
-                <button onclick="clearDocFolder('${containerId}', '${type}')" class="text-sm text-blue-600 hover:underline font-bold"><i class="fa-solid fa-arrow-left"></i> ย้อนกลับ</button>
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 text-xl"><i class="fa-solid fa-folder-open"></i></div>
+                <div>
+                    <h3 class="font-bold text-lg text-slate-800 line-clamp-1">${currentFolderFilter}</h3>
+                    <p class="text-xs text-slate-400">ทั้งหมด ${filtered.length} รายการ</p>
+                </div>
             </div>
+            <button onclick="window.clearFolderFilter('${containerId}', '${type}')" class="text-[11px] font-black uppercase tracking-[0.1em] text-slate-600 hover:text-white hover:bg-slate-800 bg-white px-6 py-3 rounded-full border border-slate-200 shadow-sm transition-all flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> ย้อนกลับ
+            </button>
         `;
         container.appendChild(header);
-        renderPagedDocs(container, filteredData, type, 1);
+
+        // Grid Items
+        const grid = document.createElement('div');
+        grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fade-in";
+
+        items.forEach(item => {
+            const div = document.createElement('div');
+            // Design: Detailed Card
+            div.className = "group bg-white rounded-[2.5rem] shadow-[0_10px_30px_-5px_rgba(0,0,0,0.05)] border border-slate-100 overflow-hidden hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15)] hover:-translate-y-2 transition-all duration-500 cursor-pointer flex flex-col";
+            div.onclick = () => window.open(item.image || item.file_url || '#', '_blank');
+            
+            div.innerHTML = `
+                <div class="aspect-[4/3] bg-slate-50 relative overflow-hidden border-b border-slate-50">
+                    ${item.image 
+                        ? `<img src="${item.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-[1.5s] ease-out">` 
+                        : `<div class="w-full h-full flex items-center justify-center text-slate-300"><i class="fa-solid fa-award text-6xl opacity-50"></i></div>`
+                    }
+                    <div class="absolute top-4 right-4">
+                        ${getSubjectBadge(item.program || 'ผลงาน')}
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-6 pt-12 opacity-0 group-hover:opacity-100 transition duration-500">
+                        <p class="text-white text-xs font-light"><i class="fa-solid fa-maximize mr-2"></i>คลิกเพื่อดูรายละเอียด</p>
+                    </div>
+                </div>
+                
+                <div class="p-6 flex-1 flex flex-col">
+                    <h4 class="font-bold text-lg text-slate-800 line-clamp-2 leading-snug mb-2 group-hover:text-blue-600 transition-colors">
+                        ${item.title || item.students || item.name || 'ไม่มีชื่อรายการ'}
+                    </h4>
+                    
+                    <div class="mt-auto pt-4 border-t border-slate-50 space-y-2">
+                        <div class="flex items-center gap-2 text-xs text-slate-500">
+                            <i class="fa-solid fa-user-circle text-slate-300 text-sm"></i>
+                            <span class="truncate font-medium">${item.name || item.students || '-'}</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                            <i class="fa-solid fa-trophy text-yellow-400"></i>
+                            <span class="truncate">${item.title || 'รางวัลเข้าร่วม'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            grid.appendChild(div);
+        });
+        container.appendChild(grid);
+
+        // Pagination Area
+        const pagId = `${containerId}-pagination`;
+        let pagDiv = document.getElementById(pagId);
+        if(!pagDiv) {
+            pagDiv = document.createElement('div');
+            pagDiv.id = pagId;
+            container.appendChild(pagDiv);
+        }
+        
+        // Determine callback function based on type
+        let callback = `window.pagedAch_${type}`;
+        renderPagination(pagId, filtered.length, ACH_ITEMS_PER_PAGE, page, callback);
     }
 }
 
-function renderDocFolders(container, data, type) {
-    const groups = data.reduce((acc, item) => {
-        const key = item.category || 'อื่นๆ';
-        if (!acc[key]) acc[key] = 0;
-        acc[key]++;
-        return acc;
-    }, {});
+// Window Pagination Bridges (ต้องมีเพื่อให้ HTML string เรียกกลับมาหา JS ได้)
+window.pagedAch_teacher = (p) => renderAchievementSystem('teacher-achievements-container', allTeacherData, 'teacher', p);
+window.pagedAch_student = (p) => renderAchievementSystem('student-achievements-container', allStudentData, 'student', p);
+window.pagedAch_school = (p) => renderAchievementSystem('school-achievements-container', allSchoolData, 'school', p);
 
-    const grid = document.createElement('div');
-    grid.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full";
+// =============================================================================
+// 4. NEWS SYSTEM (Complete Pagination)
+// =============================================================================
 
-    Object.keys(groups).forEach(cat => {
-        const count = groups[cat];
+export function renderNews(data, page = 1) {
+    if (!data) return;
+    // สำรองข้อมูลเข้า Global หากเป็นการเรียกครั้งแรก
+    if (allNewsData.length === 0 || data.length > allNewsData.length) {
+        allNewsData = data;
+    }
+
+    const container = document.getElementById('news-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const start = (page - 1) * NEWS_ITEMS_PER_PAGE;
+    const items = allNewsData.slice(start, start + NEWS_ITEMS_PER_PAGE);
+
+    if (items.length === 0) {
+        container.innerHTML = '<div class="text-center p-20 text-slate-400 font-medium bg-white/50 rounded-[2rem] border border-dashed border-slate-200">ไม่พบข่าวสาร</div>';
+        return;
+    }
+
+    items.forEach(news => {
         const div = document.createElement('div');
-        div.className = "bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-300 transition cursor-pointer flex flex-col items-center text-center gap-3 group animate-fade-in";
-        div.onclick = () => selectDocFolder(container.id, type, cat);
-        div.innerHTML = `
-            <div class="w-14 h-14 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-2xl group-hover:scale-110 transition duration-300"><i class="fa-solid fa-folder"></i></div>
-            <div><h4 class="font-bold text-gray-700 text-sm group-hover:text-blue-600 transition">${cat}</h4><span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full mt-1 inline-block">${count} ไฟล์</span></div>
-        `;
-        grid.appendChild(div);
-    });
-    container.appendChild(grid);
-}
-
-function renderPagedDocs(container, data, type, page = 1) {
-    const wrapper = document.createElement('div');
-    wrapper.className = "flex flex-col gap-3 w-full animate-fade-in";
-    
-    const totalItems = data.length;
-    const totalPages = Math.ceil(totalItems / DOCS_ITEMS_PER_PAGE);
-    if (page < 1) page = 1;
-    if (page > totalPages) page = totalPages;
-
-    const startIndex = (page - 1) * DOCS_ITEMS_PER_PAGE;
-    const endIndex = startIndex + DOCS_ITEMS_PER_PAGE;
-    const pageItems = data.slice(startIndex, endIndex);
-
-    pageItems.forEach(doc => {
-        const dateStr = doc.uploadDate ? new Date(doc.uploadDate).toLocaleDateString('th-TH') : '-';
-        let icon = 'fa-file-lines text-gray-400';
-        if (doc.title.toLowerCase().includes('pdf')) icon = 'fa-file-pdf text-red-500';
-        else if (doc.title.toLowerCase().includes('doc')) icon = 'fa-file-word text-blue-500';
-        else if (doc.title.toLowerCase().includes('xls')) icon = 'fa-file-excel text-green-500';
-
-        const div = document.createElement('div');
-        div.className = "flex items-center gap-4 p-4 bg-white border border-gray-100 rounded-xl hover:shadow-md hover:border-blue-200 transition group cursor-pointer";
-        div.onclick = () => { if(doc.fileUrl) window.open(doc.fileUrl, '_blank'); };
+        div.className = "bg-white/80 backdrop-blur-sm border border-slate-100 rounded-[2rem] p-5 shadow-sm hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-500 flex flex-col md:flex-row gap-6 mb-6 group cursor-pointer";
+        div.onclick = () => { if(news.link) window.open(news.link, '_blank'); };
         
         div.innerHTML = `
-            <div class="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center text-xl group-hover:bg-white transition shadow-sm"><i class="fa-solid ${icon}"></i></div>
-            <div class="flex-1 min-w-0">
-                <h4 class="font-bold text-gray-700 text-sm group-hover:text-blue-600 transition truncate">${doc.title}</h4>
-                <div class="flex gap-3 text-xs text-gray-400 mt-0.5"><span><i class="fa-regular fa-calendar"></i> ${dateStr}</span><span class="bg-gray-100 px-1.5 rounded text-[10px]">${doc.category || 'ทั่วไป'}</span></div>
+            <div class="w-full md:w-64 h-48 bg-slate-100 rounded-[1.5rem] overflow-hidden shrink-0 shadow-inner relative group-hover:shadow-lg transition duration-500">
+                ${news.image 
+                    ? `<img src="${news.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-[1.5s] ease-out">` 
+                    : `<div class="w-full h-full flex items-center justify-center text-slate-300"><i class="fa-regular fa-image text-4xl"></i></div>`
+                }
+                <div class="absolute top-3 left-3 bg-white/90 backdrop-blur px-3 py-1 rounded-lg text-[9px] font-black text-slate-500 border border-white uppercase tracking-wider">News</div>
             </div>
-            <div class="text-gray-300 group-hover:text-blue-500 transition px-2"><i class="fa-solid fa-download"></i></div>
+            
+            <div class="flex-1 flex flex-col justify-between py-1">
+                <div class="space-y-3">
+                    <h4 class="font-bold text-xl text-slate-800 group-hover:text-blue-600 transition-colors duration-300 leading-snug line-clamp-2">${news.title}</h4>
+                    <p class="text-slate-500 line-clamp-2 font-light text-sm leading-relaxed">คลิกเพื่ออ่านรายละเอียดข่าวสารกิจกรรมประชาสัมพันธ์...</p>
+                </div>
+                
+                <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-50">
+                    <span class="inline-flex items-center gap-2 text-[11px] font-bold text-slate-400">
+                        <i class="fa-regular fa-clock text-blue-400"></i> ${new Date(news.date).toLocaleDateString('th-TH')}
+                    </span>
+                    <span class="text-blue-600 text-[10px] font-black uppercase tracking-widest group-hover:translate-x-2 transition-transform duration-300 flex items-center gap-1">
+                        Read More <i class="fa-solid fa-arrow-right"></i>
+                    </span>
+                </div>
+            </div>
         `;
-        wrapper.appendChild(div);
-    });
-    container.appendChild(wrapper);
-    if (totalPages > 1) renderDocPagination(container, totalPages, page, type, data);
-}
-
-function renderDocPagination(container, totalPages, currentPage, type, currentFilteredData) {
-    const nav = document.createElement('div');
-    nav.className = "col-span-full flex justify-center items-center gap-2 mt-4 pt-4 border-t border-gray-100";
-    const createBtn = (label, targetPage, isActive = false, isDisabled = false) => {
-        const btn = document.createElement('button');
-        btn.innerHTML = label;
-        btn.className = `w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition ${isActive ? 'bg-blue-600 text-white' : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`;
-        if (!isDisabled && !isActive) {
-            btn.onclick = () => {
-                const oldWrapper = container.querySelector('.flex.flex-col'); if(oldWrapper) oldWrapper.remove();
-                const oldNav = container.querySelector('.col-span-full'); if(oldNav) oldNav.remove();
-                renderPagedDocs(container, currentFilteredData, type, targetPage);
-                const offset = 150; window.scrollTo({ top: container.getBoundingClientRect().top + window.pageYOffset - offset, behavior: "smooth" });
-            };
-        }
-        return btn;
-    };
-    nav.appendChild(createBtn('<i class="fa-solid fa-chevron-left"></i>', currentPage - 1, false, currentPage === 1));
-    for (let i = 1; i <= totalPages; i++) {
-        if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) nav.appendChild(createBtn(i, i, i === currentPage));
-        else if (i === currentPage - 2 || i === currentPage + 2) nav.appendChild(document.createTextNode("..."));
-    }
-    nav.appendChild(createBtn('<i class="fa-solid fa-chevron-right"></i>', currentPage + 1, false, currentPage === totalPages));
-    container.appendChild(nav);
-}
-
-window.selectDocFolder = function(containerId, type, catName) {
-    currentDocFolder = catName;
-    const data = type === 'official' ? allOfficialDocs : allFormDocs;
-    renderDocumentSystem(containerId, data, type);
-}
-window.clearDocFolder = function(containerId, type) {
-    currentDocFolder = null;
-    const data = type === 'official' ? allOfficialDocs : allFormDocs;
-    renderDocumentSystem(containerId, data, type);
-}
-
-// --------------------------------------------------------
-// EXPORTS
-// --------------------------------------------------------
-
-export function renderTeacherAchievements(data) { if(!data) return; allTeacherData = [...data].sort((a, b) => b.id - a.id); renderAchievementSystem('teacher-achievements-container', allTeacherData, 'teacher'); }
-export function renderStudentAchievements(data) { if(!data) return; allStudentData = [...data].sort((a, b) => b.id - a.id); renderAchievementSystem('student-achievements-container', allStudentData, 'student'); }
-export function renderNews(newsList) { if (!newsList) return; allNewsData = [...newsList].sort((a, b) => b.id - a.id); renderPagedNews('news-container', allNewsData, 1); }
-export function renderDocuments(data, containerId) {
-    if (!data) return;
-    if (containerId.includes('official')) { allOfficialDocs = [...data].sort((a, b) => b.id - a.id); renderDocumentSystem(containerId, allOfficialDocs, 'official'); } 
-    else { allFormDocs = [...data].sort((a, b) => b.id - a.id); renderDocumentSystem(containerId, allFormDocs, 'form'); }
-}
-
-// ✅ ฟังก์ชันไฮไลท์: รวม O-NET/NT/RT และผลงานทั่วไปเข้าด้วยกัน แล้วแยก Render อัตโนมัติ
-export function renderSchoolAchievements(data) { 
-    if (!data) return;
-    allSchoolData = [...data].sort((a, b) => b.id - a.id);
-    
-    // 1. แยกข้อมูลตาม keyword
-    const onetData = allSchoolData.filter(item => item.title.includes('O-NET') || (item.competition && item.competition.includes('O-NET')));
-    const ntData = allSchoolData.filter(item => item.title.includes('NT') || (item.competition && item.competition.includes('NT')));
-    const rtData = allSchoolData.filter(item => item.title.includes('RT') || (item.competition && item.competition.includes('RT')));
-    const generalData = allSchoolData.filter(item => !item.title.includes('O-NET') && !item.title.includes('NT') && !item.title.includes('RT'));
-
-    // 2. Render ไปยัง Container ต่างๆ (ถ้ามีในหน้า HTML)
-    // หน้าผลงานโรงเรียนทั่วไป
-    renderAchievementSystem('school-achievements-container', generalData, 'school');
-    
-    // หน้าวิชาการ
-    if(document.getElementById('onet-container')) renderAchievementSystem('onet-container', onetData, 'school');
-    if(document.getElementById('nt-container')) renderAchievementSystem('nt-container', ntData, 'school');
-    if(document.getElementById('rt-container')) renderAchievementSystem('rt-container', rtData, 'school');
-}
-
-export function renderHomeNews(newsList) {
-    const container = document.getElementById('home-news-container');
-    if (!container) return; container.innerHTML = '';
-    if (!newsList || newsList.length === 0) { container.innerHTML = '<p class="text-center text-gray-400 py-4 text-sm">ยังไม่มีข่าวประชาสัมพันธ์</p>'; return; }
-    [...newsList].sort((a, b) => b.id - a.id).slice(0, 4).forEach(news => {
-        const dateStr = news.date ? new Date(news.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
-        const div = document.createElement('div');
-        div.className = `border-b border-gray-100 pb-3 mb-2 last:border-0 last:mb-0 last:pb-0 cursor-pointer hover:bg-gray-50 transition rounded p-2 flex gap-3`;
-        div.onclick = () => { if(news.link && news.link !== '#') window.open(news.link, '_blank'); };
-        div.innerHTML = `<div class="flex-shrink-0 w-16 h-12 bg-gray-100 rounded-md overflow-hidden">${news.image ? `<img src="${news.image}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-gray-300"><i class="fa-regular fa-image"></i></div>`}</div><div class="flex-1 min-w-0"><h4 class="text-sm font-bold text-gray-700 line-clamp-1">${news.title}</h4><p class="text-xs text-gray-400 mt-1 flex items-center gap-1"><i class="fa-regular fa-clock"></i> ${dateStr}</p></div>`;
         container.appendChild(div);
     });
+
+    renderPagination('news-pagination', allNewsData.length, NEWS_ITEMS_PER_PAGE, page, "window.renderNewsPaged");
 }
-export function renderSchoolInfo(dataList) { if (!dataList || dataList.length === 0) return; const info = dataList[0]; document.getElementById('hero-motto').innerText = info.motto || ''; if(info.founding_date) document.getElementById('school-age-badge').innerText = `ก่อตั้งมาแล้ว ${new Date().getFullYear() - new Date(info.founding_date).getFullYear()} ปี`; if(info.identity) { const id = document.getElementById('school-identity'); id.innerText = info.identity; id.classList.remove('hidden'); } const vtr = document.getElementById('vtr-iframe'); if (info.vtr_url && vtr) { const vid = info.vtr_url.split('v=')[1]?.split('&')[0] || info.vtr_url.split('youtu.be/')[1]; if(vid) { vtr.src = `https://www.youtube.com/embed/${vid}`; document.getElementById('vtr-container').classList.remove('hidden'); document.getElementById('vtr-placeholder').style.display='none'; } } document.getElementById('school-color-box').style.background = `linear-gradient(to right, ${info.color_code || '#ddd'} 50%, ${info.color_code_2 || info.color_code || '#ddd'} 50%)`; if(info.song_url) { document.getElementById('school-song').src = info.song_url; document.getElementById('music-player-controls').classList.remove('hidden'); } document.getElementById('school-history-content').innerText = info.history || '-'; document.getElementById('school-mission-content').innerText = info.mission || '-'; document.getElementById('school-identity-content').innerText = info.identity || '-'; document.getElementById('footer-school-name').innerText = info.school_name || ''; }
-export function renderPersonGrid(data, containerId) { const container = document.getElementById(containerId); if(!container) return; container.innerHTML = ''; if(!data || data.length === 0) { container.innerHTML='<p class="text-center text-gray-500 col-span-full">กำลังปรับปรุงข้อมูล</p>'; return; } const sorted=[...data].sort((a,b)=>a.id-b.id); const leader=sorted[0]; const others=sorted.slice(1); const createCard = (p) => `<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col items-center text-center hover:shadow-lg transition transform hover:-translate-y-1 h-full"><div class="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-100 mb-4 shadow-inner bg-gray-200">${p.image ? `<img src="${p.image}" class="w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-gray-400"><i class="fa-solid fa-user text-4xl"></i></div>'}</div><h3 class="text-lg font-bold text-gray-800 mb-1">${p.name}</h3><p class="text-blue-600 font-medium text-sm">${p.role}</p></div>`; let html=''; if(leader) html+=`<div class="flex justify-center mb-8"><div class="w-full max-w-xs">${createCard(leader)}</div></div>`; if(others.length>0){ html+='<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">'; others.forEach(p=>html+=createCard(p)); html+='</div>'; } container.innerHTML=html; }
-export function renderHistoryTable(tbodyId, data) { const tbody = document.getElementById(tbodyId); if (!tbody) return; tbody.innerHTML = ''; if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">ไม่มีข้อมูล</td></tr>'; return; } [...data].sort((a,b)=>a.id-b.id).forEach((item,index)=>{ const tr=document.createElement('tr'); tr.className=index%2===0?'bg-white':'bg-gray-50'; tr.innerHTML=`<td class="px-6 py-4 text-sm text-gray-500">${index+1}</td><td class="px-6 py-4"><div class="flex items-center"><div class="h-10 w-10 mr-4 bg-gray-200 rounded-full overflow-hidden">${item.image?`<img class="h-10 w-10 object-cover" src="${item.image}">`:'<div class="h-full w-full flex items-center justify-center text-gray-400"><i class="fa-solid fa-user"></i></div>'}</div><div class="text-sm font-medium text-gray-900">${item.name}</div></div></td><td class="px-6 py-4 text-sm text-gray-500">${item.role||'-'}</td><td class="px-6 py-4 text-sm text-gray-500">${item.year||`${item.start_date||'-'} ถึง ${item.end_date||'ปัจจุบัน'}`}</td>`; tbody.appendChild(tr); }); }
-export function renderInnovations(data) { const container = document.getElementById('innovations-container'); if (!container) return; container.innerHTML = ''; if (!data || data.length === 0) { container.innerHTML = '<div class="col-span-full text-center text-gray-500">ไม่พบนวัตกรรม</div>'; return; } [...data].sort((a, b) => b.id - a.id).forEach(item => { const div = document.createElement('div'); div.className = "group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden"; div.innerHTML = `<div class="aspect-[4/3] bg-gray-100 relative overflow-hidden">${item.coverImageUrl ? `<img src="${item.coverImageUrl}" class="w-full h-full object-cover transition duration-700 group-hover:scale-110">` : `<div class="w-full h-full flex items-center justify-center text-blue-200"><i class="fa-solid fa-lightbulb text-5xl"></i></div>`}<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-end p-4">${item.fileUrl ? `<a href="${item.fileUrl}" target="_blank" class="text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-full text-sm font-bold shadow-lg w-full text-center transform translate-y-4 group-hover:translate-y-0 transition duration-300">เปิดดูผลงาน</a>` : ''}</div></div><div class="p-5"><div class="flex items-center gap-2 mb-2"><span class="bg-blue-50 text-blue-600 text-xs font-bold px-2 py-1 rounded-md">${item.subject || 'ทั่วไป'}</span></div><h3 class="font-bold text-gray-800 text-lg mb-2 line-clamp-2 group-hover:text-blue-600 transition">${item.title}</h3><p class="text-sm text-gray-500 flex items-center gap-2"><i class="fa-solid fa-user-pen"></i> ${item.creator || 'คณะผู้จัดทำ'}</p></div>`; container.appendChild(div); }); }
-export function renderStudentChart(data) { const container = document.getElementById('student-summary-container'); const chartCanvas = document.getElementById('studentChart'); if (!data || data.length === 0) { if(container) container.innerHTML = '<p class="text-center text-gray-400 col-span-3">ยังไม่มีข้อมูลนักเรียน</p>'; return; } data.sort((a, b) => a.id - b.id); let totalMale = 0, totalFemale = 0; data.forEach(d => { totalMale += parseInt(d.male || 0); totalFemale += parseInt(d.female || 0); }); if (container) { container.innerHTML = `<div class="bg-blue-100 p-4 rounded-xl text-center border border-blue-200"><h3 class="text-blue-800 font-bold text-lg">ทั้งหมด</h3><p class="text-3xl font-bold text-blue-600">${totalMale + totalFemale} <span class="text-sm">คน</span></p></div><div class="bg-green-100 p-4 rounded-xl text-center border border-green-200"><h3 class="text-green-800 font-bold text-lg">ชาย</h3><p class="text-3xl font-bold text-green-600">${totalMale} <span class="text-sm">คน</span></p></div><div class="bg-pink-100 p-4 rounded-xl text-center border border-pink-200"><h3 class="text-pink-800 font-bold text-lg">หญิง</h3><p class="text-3xl font-bold text-pink-600">${totalFemale} <span class="text-sm">คน</span></p></div>`; } if (chartCanvas) { if (window.myStudentChart) window.myStudentChart.destroy(); window.myStudentChart = new Chart(chartCanvas, { type: 'bar', data: { labels: data.map(d => d.grade), datasets: [ { label: 'ชาย', data: data.map(d => d.male), backgroundColor: '#3b82f6', borderRadius: 4 }, { label: 'หญิง', data: data.map(d => d.female), backgroundColor: '#ec4899', borderRadius: 4 } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }, plugins: { legend: { position: 'bottom' }, title: { display: true, text: 'แผนภูมิแสดงจำนวนนักเรียนแยกตามระดับชั้น' } } } }); } }
-export function setupDropdowns() {}
-export function setupModal() {}
-export function closeAllDropdowns() { document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden')); }
+window.renderNewsPaged = (p) => renderNews(allNewsData, p);
+
+// =============================================================================
+// 5. DOCUMENT SYSTEM (Categorized Folders + Pagination)
+// =============================================================================
+
+export function renderDocumentSystem(data, containerId, type = 'official', page = 1) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    // Save to global based on type
+    if(type === 'official') allOfficialDocs = data; else allFormDocs = data;
+    const current = currentDocFolder[type];
+    
+    container.innerHTML = '';
+
+    if (current === null) {
+        // --- VIEW 1: FOLDERS ---
+        const groups = data.reduce((acc, item) => {
+            const key = item.category || 'ทั่วไป';
+            if (!acc[key]) acc[key] = 0; acc[key]++;
+            return acc;
+        }, {});
+        
+        const grid = document.createElement('div');
+        grid.className = "grid grid-cols-2 md:grid-cols-4 gap-6 animate-fade-in";
+        
+        Object.entries(groups).forEach(([name, count]) => {
+            grid.innerHTML += `
+                <div onclick="window.selectDocFolder('${containerId}', '${type}', '${name}')" class="group bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-[0_20px_40px_-10px_rgba(245,158,11,0.15)] hover:border-amber-200 hover:-translate-y-2 transition-all duration-500 cursor-pointer text-center relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-20 h-20 bg-amber-50 rounded-bl-[3rem] -mr-8 -mt-8 transition group-hover:scale-150"></div>
+                    <div class="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-3xl text-amber-500 mx-auto mb-4 relative z-10 group-hover:scale-110 group-hover:rotate-6 transition duration-500 shadow-sm"><i class="fa-solid fa-folder-closed"></i></div>
+                    <h4 class="font-bold text-slate-700 text-sm line-clamp-1 group-hover:text-amber-600 transition-colors relative z-10">${name}</h4>
+                    <div class="mt-3 relative z-10"><span class="text-[9px] font-black text-amber-500 bg-white px-3 py-1 rounded-full shadow-sm border border-amber-50">${count} Files</span></div>
+                </div>`;
+        });
+        container.appendChild(grid);
+
+    } else {
+        // --- VIEW 2: FILE LIST ---
+        const filtered = data.filter(item => (item.category || 'ทั่วไป') === current);
+        const start = (page - 1) * DOCS_ITEMS_PER_PAGE;
+        const items = filtered.slice(start, start + DOCS_ITEMS_PER_PAGE);
+
+        container.className = "space-y-4 animate-fade-in";
+        container.innerHTML = `
+            <div class="flex items-center justify-between bg-slate-50 p-4 rounded-[2rem] border border-slate-100 mb-6">
+                <h3 class="font-bold text-lg text-slate-700 flex items-center gap-3 ml-2"><i class="fa-solid fa-folder-open text-amber-500"></i> ${current}</h3>
+                <button onclick="window.clearDocFolder('${containerId}', '${type}')" class="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-800 bg-white px-5 py-2.5 rounded-full border border-slate-200 shadow-sm hover:shadow transition-all">ย้อนกลับ</button>
+            </div>
+            <div class="grid grid-cols-1 gap-3">
+                ${items.map(doc => `
+                <div class="group bg-white p-4 rounded-[1.5rem] border border-slate-100 flex items-center justify-between hover:shadow-lg hover:border-blue-100 transition-all duration-300 cursor-pointer" onclick="window.open('${doc.fileUrl}', '_blank')">
+                    <div class="flex items-center gap-5 overflow-hidden">
+                        <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-xl text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors shadow-inner shrink-0">
+                            <i class="fa-solid fa-file-lines"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <h4 class="font-bold text-sm text-slate-700 group-hover:text-blue-600 transition-colors truncate">${doc.title}</h4>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2 mt-1">
+                                <i class="fa-regular fa-clock"></i> ${new Date(doc.uploadDate).toLocaleDateString('th-TH')}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-slate-50 text-slate-300 flex items-center justify-center group-hover:bg-blue-500 group-hover:text-white transition-all shadow-sm shrink-0">
+                        <i class="fa-solid fa-download text-xs"></i>
+                    </div>
+                </div>`).join('')}
+            </div>
+            <div id="${containerId}-pagination"></div>`;
+        
+        renderPagination(`${containerId}-pagination`, filtered.length, DOCS_ITEMS_PER_PAGE, page, `window.pagedDoc_${type}`);
+    }
+}
+window.pagedDoc_official = (p) => renderDocumentSystem(allOfficialDocs, 'official-docs-container', 'official', p);
+window.pagedDoc_form = (p) => renderDocumentSystem(allFormDocs, 'form-docs-container', 'form', p);
+
+// =============================================================================
+// 6. PERSON & STUDENT GRID (Lumina Bento)
+// =============================================================================
+
+export function renderPersonGrid(data, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+
+    if(!data || data.length === 0) {
+        container.innerHTML='<p class="text-center text-gray-400 col-span-full py-10 bg-slate-50 rounded-2xl border border-dashed">กำลังปรับปรุงข้อมูลบุคลากร</p>';
+        return;
+    }
+
+    const sorted = [...data].sort((a,b) => a.id - b.id);
+    const leader = sorted[0];
+    const others = sorted.slice(1);
+
+    const createCard = (p, isLeader = false) => `
+        <div class="relative group rounded-[2.5rem] p-8 ${isLeader ? 'bg-gradient-to-b from-white to-blue-50/50 border-blue-100 shadow-[0_20px_60px_-15px_rgba(59,130,246,0.2)]' : 'bg-white border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-2'} border overflow-hidden transition-all duration-700 flex flex-col items-center text-center h-full">
+            <div class="absolute top-0 right-0 w-32 h-32 rounded-full blur-[60px] opacity-40 bg-blue-100 pointer-events-none"></div>
+            
+            <div class="w-32 h-32 rounded-full overflow-hidden border-[6px] ${isLeader ? 'border-blue-100 ring-4 ring-blue-50' : 'border-white shadow-md'} bg-white mb-6 group-hover:scale-105 group-hover:rotate-2 transition duration-700 relative z-10">
+                ${p.image 
+                    ? `<img src="${p.image}" class="w-full h-full object-cover">` 
+                    : `<div class="w-full h-full flex items-center justify-center text-slate-200"><i class="fa-solid fa-user text-5xl"></i></div>`
+                }
+            </div>
+            
+            <div class="relative z-10 w-full">
+                <h3 class="text-lg font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">${p.name}</h3>
+                <div class="inline-block px-4 py-1 bg-slate-50 rounded-full border border-slate-100 shadow-sm">
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">${p.role}</p>
+                </div>
+            </div>
+        </div>`;
+
+    if (leader) {
+        container.innerHTML += `<div class="flex justify-center mb-12 animate-fade-in"><div class="w-full max-w-sm">${createCard(leader, true)}</div></div>`;
+    }
+    if (others.length > 0) {
+        let grid = `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">`;
+        others.forEach(p => grid += createCard(p));
+        grid += `</div>`;
+        container.innerHTML += grid;
+    }
+}
+
+// =============================================================================
+// 7. CORE UI COMPONENTS (History, Charts, Innovations, HomeNews)
+// =============================================================================
+
+export function renderHistoryTable(tbodyId, data) {
+    const container = document.getElementById(tbodyId); 
+    if (!container) return;
+    
+    // Auto-detect if using table or div
+    const isTable = container.tagName === 'TBODY';
+    const target = isTable ? container.closest('table').parentElement : container;
+    if (isTable) container.closest('table').style.display = 'none';
+    
+    target.className = "grid grid-cols-1 gap-4";
+    target.innerHTML = '';
+    
+    if(!data || data.length === 0) {
+        target.innerHTML = `<div class="p-8 text-center text-slate-400">ยังไม่มีข้อมูล</div>`;
+        return;
+    }
+
+    [...data].sort((a,b) => b.id - a.id).forEach(item => {
+        target.innerHTML += `
+        <div class="group bg-white rounded-[2rem] p-4 border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-500 flex items-center gap-6 overflow-hidden">
+            <div class="w-20 h-20 rounded-2xl bg-slate-50 overflow-hidden shrink-0 group-hover:scale-105 transition duration-500 border border-slate-100">
+                ${item.image ? `<img class="h-full w-full object-cover" src="${item.image}">` : `<div class="h-full w-full flex items-center justify-center text-slate-300"><i class="fa-solid fa-user text-2xl"></i></div>`}
+            </div>
+            <div class="flex-1">
+                <h4 class="font-bold text-lg text-slate-800 group-hover:text-blue-600 transition-colors">${item.name}</h4>
+                <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mt-1">${item.role || '-'}</p>
+            </div>
+            <div class="px-4 py-1.5 bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-wider rounded-full border border-amber-100 shadow-sm whitespace-nowrap">${item.year || '-'}</div>
+        </div>`;
+    });
+}
+
+export function renderStudentChart(data) {
+    const container = document.getElementById('student-summary-container');
+    const chartCanvas = document.getElementById('studentChart');
+    if (!data || data.length === 0) return;
+
+    let totalMale = 0, totalFemale = 0;
+    data.forEach(d => { totalMale += parseInt(d.male || 0); totalFemale += parseInt(d.female || 0); });
+
+    if (container) {
+        container.innerHTML = `
+        <div class="col-span-full grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-[2.5rem] p-6 shadow-xl text-white flex items-center gap-5 hover:-translate-y-1 transition duration-500">
+                <div class="w-14 h-14 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center text-2xl border border-white/10"><i class="fa-solid fa-users"></i></div>
+                <div><p class="text-[10px] font-bold opacity-70 uppercase tracking-widest">ทั้งหมด</p><h3 class="text-3xl font-black">${totalMale+totalFemale}</h3></div>
+            </div>
+            <div class="bg-white rounded-[2.5rem] p-6 shadow-lg border border-sky-100 flex items-center gap-5 hover:-translate-y-1 transition duration-500">
+                <div class="w-14 h-14 bg-sky-50 rounded-2xl flex items-center justify-center text-2xl text-sky-500 border border-sky-100"><i class="fa-solid fa-child"></i></div>
+                <div><p class="text-[10px] font-bold text-sky-400 uppercase tracking-widest">ชาย</p><h3 class="text-3xl font-black text-slate-800">${totalMale}</h3></div>
+            </div>
+            <div class="bg-white rounded-[2.5rem] p-6 shadow-lg border border-pink-100 flex items-center gap-5 hover:-translate-y-1 transition duration-500">
+                <div class="w-14 h-14 bg-pink-50 rounded-2xl flex items-center justify-center text-2xl text-pink-500 border border-pink-100"><i class="fa-solid fa-child-dress"></i></div>
+                <div><p class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">หญิง</p><h3 class="text-3xl font-black text-slate-800">${totalFemale}</h3></div>
+            </div>
+        </div>`;
+    }
+
+    if (chartCanvas && window.Chart) {
+        chartCanvas.parentElement.className = "bg-white rounded-[3rem] p-6 md:p-10 shadow-xl border border-slate-100 overflow-hidden";
+        if (window.myStudentChart) window.myStudentChart.destroy();
+        window.myStudentChart = new Chart(chartCanvas, {
+            type: 'bar',
+            data: {
+                labels: data.map(d => d.grade),
+                datasets: [
+                    { label: 'ชาย', data: data.map(d => d.male), backgroundColor: '#0ea5e9', borderRadius: 6, barPercentage: 0.6, categoryPercentage: 0.8 },
+                    { label: 'หญิง', data: data.map(d => d.female), backgroundColor: '#ec4899', borderRadius: 6, barPercentage: 0.6, categoryPercentage: 0.8 }
+                ]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#f8fafc' } } },
+                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { family: "'Sarabun', sans-serif" } } } }
+            }
+        });
+    }
+}
+
+export function renderInnovations(data) { 
+    const c = document.getElementById('innovations-container'); 
+    if(!c) return;
+    c.innerHTML=''; 
+    if(!data || data.length === 0) {
+        c.innerHTML = '<div class="col-span-full text-center text-slate-400 py-20 font-medium">ยังไม่มีนวัตกรรมใหม่</div>';
+        return;
+    }
+    c.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8";
+    data.forEach(i => { 
+        c.innerHTML += `
+        <div class="group bg-white rounded-[2.5rem] shadow-lg border border-slate-100 overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer" onclick="window.open('${i.fileUrl}','_blank')">
+            <div class="aspect-[4/3] bg-slate-50 relative overflow-hidden">
+                ${i.coverImageUrl ? `<img src="${i.coverImageUrl}" class="w-full h-full object-cover group-hover:scale-110 transition duration-[1.5s]">` : '<div class="w-full h-full flex items-center justify-center"><i class="fa-solid fa-lightbulb text-6xl text-slate-200"></i></div>'}
+                <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-xl text-[9px] font-black text-blue-600 shadow-sm border border-white uppercase tracking-widest">${i.subject || 'Innovation'}</div>
+            </div>
+            <div class="p-6">
+                <h4 class="font-bold text-lg text-slate-800 line-clamp-2 h-14 group-hover:text-blue-600 transition-colors">${i.title}</h4>
+                <div class="flex items-center gap-3 pt-4 border-t border-slate-50">
+                    <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 text-xs"><i class="fa-solid fa-user-pen"></i></div>
+                    <div class="text-[10px]"><p class="font-bold text-slate-700">${i.creator}</p><p class="text-slate-400">${i.class || '-'}</p></div>
+                </div>
+            </div>
+        </div>`; 
+    }); 
+}
+
+export function renderHomeNews(newsList) { 
+    const c = document.getElementById('home-news-container'); if(!c) return;
+    c.innerHTML = ''; if(!newsList || newsList.length === 0) return;
+    [...newsList].sort((a, b) => b.id - a.id).slice(0,4).forEach(n => {
+        c.innerHTML += `
+        <div class="p-4 border-b border-slate-50 flex gap-4 hover:bg-white/80 cursor-pointer transition rounded-2xl group" onclick="window.open('${n.link || '#'}', '_blank')">
+            <div class="w-20 h-14 bg-slate-100 rounded-xl overflow-hidden shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-500">${n.image ? `<img src="${n.image}" class="w-full h-full object-cover">` : ''}</div>
+            <div class="flex-1 min-w-0 py-0.5">
+                <h4 class="text-sm font-bold text-slate-700 line-clamp-1 group-hover:text-blue-600 transition-colors">${n.title}</h4>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-400 inline-block mr-1"></span> ${new Date(n.date).toLocaleDateString('th-TH')}</p>
+            </div>
+        </div>`; 
+    }); 
+}
+
+// =============================================================================
+// 8. WINDOW BRIDGES (Search & Action Functions)
+// =============================================================================
+
+// Exports for script.js
+export function renderTeacherAchievements(data) { allTeacherData = data; renderAchievementSystem('teacher-achievements-container', data, 'teacher'); }
+export function renderStudentAchievements(data) { allStudentData = data; renderAchievementSystem('student-achievements-container', data, 'student'); }
+export function renderSchoolAchievements(data) { 
+    allSchoolData = data; 
+    const general = data.filter(i => !(i.title+i.competition).includes('O-NET') && !(i.title+i.competition).includes('NT') && !(i.title+i.competition).includes('RT'));
+    renderAchievementSystem('school-achievements-container', general, 'school'); 
+}
+
+// Search Logic
+window.filterAchievements = (inputId, type, containerId) => {
+    const val = document.getElementById(inputId).value.toLowerCase();
+    const source = type==='teacher' ? allTeacherData : (type==='student' ? allStudentData : allSchoolData);
+    const filtered = source.filter(i => (i.title+i.students+i.name+i.competition).toLowerCase().includes(val));
+    currentFolderFilter = val ? 'ผลการค้นหา' : null;
+    renderAchievementSystem(containerId, filtered, type);
+};
+
+window.filterNews = (id) => {
+    const val = document.getElementById(id).value.toLowerCase();
+    const filtered = allNewsData.filter(i => i.title.toLowerCase().includes(val));
+    renderNews(filtered); // Render will handle pagination reset
+};
+
+window.filterDocuments = (id, containerId) => {
+    const val = document.getElementById(id).value.toLowerCase();
+    const type = containerId.includes('official') ? 'official' : 'form';
+    const source = type === 'official' ? allOfficialDocs : allFormDocs;
+    const filtered = source.filter(i => (i.title + i.category).toLowerCase().includes(val));
+    currentDocFolder[type] = val ? 'ผลการค้นหา' : null;
+    renderDocumentSystem(filtered, containerId, type);
+};
+
+// Folder Logic Bridges
+window.selectFolder = (cid, type, name) => { currentFolderFilter = name; const data = type==='teacher'?allTeacherData : (type==='student'?allStudentData : allSchoolData); renderAchievementSystem(cid, data, type); };
+window.clearFolderFilter = (cid, type) => { currentFolderFilter = null; const data = type==='teacher'?allTeacherData : (type==='student'?allStudentData : allSchoolData); renderAchievementSystem(cid, data, type); };
+window.selectDocFolder = (cid, type, catName) => { currentDocFolder[type] = catName; const data = type === 'official' ? allOfficialDocs : allFormDocs; renderDocumentSystem(data, cid, type); };
+window.clearDocFolder = (cid, type) => { currentDocFolder[type] = null; const data = type === 'official' ? allOfficialDocs : allFormDocs; renderDocumentSystem(data, cid, type); };

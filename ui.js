@@ -89,7 +89,7 @@ export function renderSchoolInfo(dataList) {
 
     if (info.school_name) document.title = info.school_name;
 
-    // Header & Hero
+    // Header & Hero Mapping
     const mapping = {
         'header-school-name': info.school_name,
         'header-affiliation': info.affiliation,
@@ -114,6 +114,14 @@ export function renderSchoolInfo(dataList) {
     for (const [id, val] of Object.entries(mapping)) {
         const el = document.getElementById(id);
         if (el) el.innerText = val || '-';
+    }
+
+    // ✅ ส่วนสำคัญ: Logic ตัดคำว่า "โรงเรียน" สำหรับป้าย Hero Card ใหม่
+    if (document.getElementById('hero-school-name-short')) {
+        let shortName = info.school_name || 'โรงเรียน';
+        // ลบคำว่า "โรงเรียน" ออก และตัดช่องว่างหน้าหลัง
+        shortName = shortName.replace('โรงเรียน', '').trim();
+        document.getElementById('hero-school-name-short').innerText = shortName;
     }
 
     // School Age

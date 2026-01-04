@@ -245,41 +245,54 @@ window.pagedAch_school = (p) => renderAchievementSystem('school-achievements-con
 // 4. NEWS SYSTEM (Complete Pagination)
 // =============================================================================
 
+// ✅ แก้ไข: ข่าวประชาสัมพันธ์ พร้อมระบบแบ่งหน้า (ฉบับสมบูรณ์)
 export function renderNews(data, page = 1) {
     if (!data) return;
-    if (allNewsData.length === 0) allNewsData = data;
+    
+    // สำรองข้อมูลเข้า Global Variable หากเป็นการเรียกครั้งแรก
+    if (allNewsData.length === 0 || data.length > allNewsData.length) {
+        allNewsData = data;
+    }
 
     const container = document.getElementById('news-container');
     if (!container) return;
     container.innerHTML = '';
 
+    // คำนวณขอบเขตข้อมูลที่จะแสดงในหน้านั้นๆ
     const startIndex = (page - 1) * NEWS_ITEMS_PER_PAGE;
     const pageItems = data.slice(startIndex, startIndex + NEWS_ITEMS_PER_PAGE);
 
+    if (pageItems.length === 0) {
+        container.innerHTML = '<div class="text-center p-16 text-slate-400 font-medium bg-white/50 rounded-[2.5rem] border border-dashed border-slate-200">ไม่พบข้อมูลข่าวสาร</div>';
+        return;
+    }
+
+    // วาดรายการข่าว (Lumina Bento Skin)
     pageItems.forEach(news => {
-        const div = document.createElement('div');
-        div.className = "bg-white/90 backdrop-blur-sm border border-slate-100 rounded-[2.5rem] p-6 shadow-sm hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] hover:-translate-y-2 transition-all duration-700 flex flex-col lg:flex-row gap-8 mb-8 group cursor-pointer";
-        div.onclick = () => { if(news.link) window.open(news.link, '_blank'); };
-        div.innerHTML = `
+        container.innerHTML += `
+        <div class="bg-white/90 backdrop-blur-sm border border-slate-100 rounded-[2.5rem] p-6 shadow-sm hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] hover:-translate-y-2 transition-all duration-700 flex flex-col lg:flex-row gap-8 mb-8 group cursor-pointer" onclick="window.open('${news.link || '#'}', '_blank')">
             <div class="w-full lg:w-64 h-48 bg-slate-100 rounded-[1.8rem] overflow-hidden shrink-0 shadow-inner">
-                ${news.image ? `<img src="${news.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-[1.5s]">` : `<div class="w-full h-full flex items-center justify-center text-slate-200"><i class="fa-solid fa-image text-5xl"></i></div>`}
+                ${news.image ? `<img src="${news.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-[1.5s] ease-out">` : `<div class="w-full h-full flex items-center justify-center text-slate-200"><i class="fa-solid fa-image text-5xl"></i></div>`}
             </div>
             <div class="flex-1 flex flex-col justify-between py-2">
                 <div class="space-y-4">
                     <h4 class="font-bold text-2xl text-slate-800 group-hover:text-blue-600 transition-colors duration-500 leading-tight line-clamp-2">${news.title}</h4>
-                    <p class="text-slate-500 line-clamp-2 font-light leading-relaxed">คลิกเพื่ออ่านรายละเอียดข่าวประชาสัมพันธ์เพิ่มเติม ประจำวันที่ ${new Date(news.date).toLocaleDateString('th-TH')}</p>
+                    <p class="text-slate-500 line-clamp-2 font-light leading-relaxed">อ่านรายละเอียดข่าวประชาสัมพันธ์ ประจำวันที่ ${new Date(news.date).toLocaleDateString('th-TH')}</p>
                 </div>
                 <div class="flex items-center justify-between mt-8 pt-6 border-t border-slate-50">
                     <span class="inline-flex items-center gap-2 px-4 py-1.5 bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] rounded-full border border-slate-100 shadow-sm"><i class="fa-regular fa-calendar-alt text-blue-400"></i> ${new Date(news.date).toLocaleDateString('th-TH')}</span>
                     <span class="text-blue-600 text-xs font-black uppercase tracking-widest group-hover:translate-x-3 transition-all duration-500">Read More <i class="fa-solid fa-chevron-right ml-2 text-[10px]"></i></span>
                 </div>
             </div>
-        `;
-        container.appendChild(div);
+        </div>`;
     });
 
+    // ✅ เรียกสร้างปุ่มหน้า 1 2 3
+    // พารามิเตอร์สุดท้ายคือชื่อฟังก์ชันที่จะให้กดแล้วทำงาน (ต้องตรงกับข้างล่าง)
     renderPagination('news-pagination', data.length, NEWS_ITEMS_PER_PAGE, page, "window.renderNewsPaged");
 }
+
+// ✅ ตัวเชื่อมสำหรับปุ่ม Pagination ของข่าว
 window.renderNewsPaged = (p) => renderNews(allNewsData, p);
 
 // =============================================================================

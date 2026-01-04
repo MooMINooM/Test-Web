@@ -703,25 +703,23 @@ window.selectDocFolder = (cid, type, catName) => { currentDocFolder[type] = catN
 window.clearDocFolder = (cid, type) => { currentDocFolder[type] = null; const data = type === 'official' ? allOfficialDocs : allFormDocs; renderDocumentSystem(data, cid, type, 1); };
 
 // =============================================================================
-// 9. PAGINATION HANDLERS (สำคัญ: ต้องมีเพื่อให้กดหน้า 2, 3... ได้)
+// 9. WINDOW BRIDGES & PAGINATION HANDLERS (สำคัญมาก: แก้บั๊กกดหน้า 2 3 ไม่ได้)
 // =============================================================================
 
-// ✅ ตัวจัดการการเปลี่ยนหน้าของผลงานครู
+// ✅ ฟังก์ชันสำหรับจัดการการกดเลขหน้าในระบบเกียรติบัตร
 window.pagedAch_teacher = (p) => {
     renderAchievementSystem('teacher-achievements-container', allTeacherData, 'teacher', p);
 };
 
-// ✅ ตัวจัดการการเปลี่ยนหน้าของผลงานนักเรียน
 window.pagedAch_student = (p) => {
     renderAchievementSystem('student-achievements-container', allStudentData, 'student', p);
 };
 
-// ✅ ตัวจัดการการเปลี่ยนหน้าของผลงานสถานศึกษา และ วิชาการ (O-NET/NT/RT)
 window.pagedAch_school = (p) => {
-    // ฟังก์ชันนี้จะจัดการรวมทั้งผลงานทั่วไปและหน้าวิชาการ
+    // แสดงผลทั่วไป
     renderAchievementSystem('school-achievements-container', allSchoolData, 'school', p);
     
-    // คัดกรองข้อมูลเฉพาะส่วนสำหรับหน้าวิชาการกรณีที่มีการเปลี่ยนหน้าในหน้านั้นๆ
+    // อัปเดตหน้าวิชาการกรณีที่มีการเปลี่ยนหน้า
     const onet = allSchoolData.filter(i => (i.title + i.competition).includes('O-NET'));
     const nt = allSchoolData.filter(i => (i.title + i.competition).includes('NT'));
     const rt = allSchoolData.filter(i => (i.title + i.competition).includes('RT'));
@@ -731,21 +729,69 @@ window.pagedAch_school = (p) => {
     if(document.getElementById('rt-container')) renderAchievementSystem('rt-container', rt, 'school', p);
 };
 
-// ✅ ตัวจัดการการเปลี่ยนหน้าของเอกสารราชการ
+// ✅ ฟังก์ชันสำหรับระบบเอกสาร
 window.pagedDoc_official = (p) => {
     renderDocumentSystem(allOfficialDocs, 'documents-official-container', 'official', p);
 };
 
-// ✅ ตัวจัดการการเปลี่ยนหน้าของแบบฟอร์ม
 window.pagedDoc_form = (p) => {
     renderDocumentSystem(allFormDocs, 'documents-forms-container', 'form', p);
 };
 
-// ✅ ฟังก์ชันตั้งค่า Dropdown และ Modal (เตรียมไว้ให้โครงสร้างสมบูรณ์)
+// ✅ ฟังก์ชันสำหรับระบบโฟลเดอร์และการค้นหา (เพื่อให้ onclick ใน HTML ทำงานได้)
+window.selectFolder = (cid, type, name) => { 
+    currentFolderFilter = name; 
+    const data = type==='teacher' ? allTeacherData : (type==='student' ? allStudentData : allSchoolData); 
+    renderAchievementSystem(cid, data, type, 1); 
+};
+
+window.clearFolderFilter = (cid, type) => { 
+    currentFolderFilter = null; 
+    const data = type==='teacher' ? allTeacherData : (type==='student' ? allStudentData : allSchoolData); 
+    renderAchievementSystem(cid, data, type, 1); 
+};
+
+window.selectDocFolder = (cid, type, catName) => { 
+    currentDocFolder[type] = catName; 
+    const data = type === 'official' ? allOfficialDocs : allFormDocs; 
+    renderDocumentSystem(data, cid, type, 1); 
+};
+
+window.clearDocFolder = (cid, type) => { 
+    currentDocFolder[type] = null; 
+    const data = type === 'official' ? allOfficialDocs : allFormDocs; 
+    renderDocumentSystem(data, cid, type, 1); 
+};
+
+// ✅ ฟังก์ชันค้นหา
+window.filterAchievements = (inputId, type, containerId) => {
+    const val = document.getElementById(inputId).value.toLowerCase();
+    const source = type==='teacher' ? allTeacherData : (type==='student' ? allStudentData : allSchoolData);
+    const filtered = source.filter(i => (i.title + i.students + i.name + (i.competition || '')).toLowerCase().includes(val));
+    currentFolderFilter = val ? 'ผลการค้นหา' : null;
+    renderAchievementSystem(containerId, filtered, type, 1);
+};
+
+window.filterNews = (id) => {
+    const val = document.getElementById(id).value.toLowerCase();
+    const filtered = allNewsData.filter(i => i.title.toLowerCase().includes(val));
+    renderNews(filtered, 1);
+};
+
+window.filterDocuments = (id, containerId) => {
+    const val = document.getElementById(id).value.toLowerCase();
+    const type = containerId.includes('official') ? 'official' : 'form';
+    const source = type === 'official' ? allOfficialDocs : allFormDocs;
+    const filtered = source.filter(i => (i.title + i.category).toLowerCase().includes(val));
+    currentDocFolder[type] = val ? 'ผลการค้นหา' : null;
+    renderDocumentSystem(filtered, containerId, type, 1);
+};
+
+// ✅ ฟังก์ชันสำหรับการตั้งค่า UI เบื้องต้น
 export function setupDropdowns() {}
 export function setupModal() {}
 export function closeAllDropdowns() { 
     document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden')); 
 }
 
-console.log("Lumina Bento UI System: Ready");
+console.log("Lumina Bento Bridge: Connected");

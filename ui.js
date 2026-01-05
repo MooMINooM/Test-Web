@@ -67,7 +67,8 @@ export function renderSchoolInfo(dataList) {
 
     // ✅ บรรทัดนี้จะเปลี่ยนชื่อบนแท็บเว็บ (Browser Tab Title)
     if (info.school_name) {
-        document.title = info.school_name;
+        document.title = info.school_name; 
+    }
         
     // --- ส่วนที่ใช้แสดงชื่อโรงเรียนใน Hero Banner ---
     const heroNameEl = document.getElementById('hero-school-name-short');

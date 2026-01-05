@@ -155,6 +155,10 @@ export function renderSchoolInfo(dataList) {
 // 3. ACHIEVEMENT SYSTEM (List Style + Folder Logic)
 // =============================================================================
 
+// =============================================================================
+// 3. ACHIEVEMENT SYSTEM (✅ แสดงผลแบบ Card พร้อมรูปเกียรติบัตร)
+// =============================================================================
+
 export function renderAchievementSystem(containerId, data, type, page = 1) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -166,7 +170,7 @@ export function renderAchievementSystem(containerId, data, type, page = 1) {
     }
 
     if (currentFolderFilter === null) {
-        // --- VIEW 1: โหมดโฟลเดอร์ (คงเดิม) ---
+        // VIEW 1: โหมดเลือกโฟลเดอร์ (รายการแข่งขัน)
         const groups = data.reduce((acc, item) => {
             const key = item.competition || 'รายการอื่นๆ';
             if (!acc[key]) acc[key] = { count: 0, latestImage: item.image };
@@ -180,51 +184,60 @@ export function renderAchievementSystem(containerId, data, type, page = 1) {
             const div = document.createElement('div');
             div.className = "group bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-blue-200 hover:-translate-y-2 transition-all duration-500 cursor-pointer text-center relative overflow-hidden h-full flex flex-col items-center justify-center";
             div.onclick = () => window.selectFolder(containerId, type, name);
-            div.innerHTML = `<div class="w-20 h-20 bg-white rounded-[1.5rem] flex items-center justify-center text-4xl text-blue-500 mx-auto mb-4 shadow-sm border border-blue-50 group-hover:scale-110 transition duration-500 overflow-hidden relative">${groups[name].latestImage ? `<img src="${groups[name].latestImage}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-folder-open text-blue-100"></i>`}</div><h4 class="font-bold text-slate-700 text-sm md:text-base line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors w-full px-2">${name}</h4><div class="mt-3"><span class="text-[10px] font-black text-blue-400 uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-full border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-500">${groups[name].count} Items</span></div>`;
+            div.innerHTML = `
+                <div class="w-20 h-20 bg-white rounded-[1.5rem] flex items-center justify-center text-4xl text-blue-500 mx-auto mb-4 shadow-sm border border-blue-50 group-hover:scale-110 transition duration-500 overflow-hidden relative">
+                    ${groups[name].latestImage ? `<img src="${groups[name].latestImage}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-folder-open text-blue-100"></i>`}
+                </div>
+                <h4 class="font-bold text-slate-700 text-sm md:text-base line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors w-full px-2">${name}</h4>
+                <div class="mt-3">
+                    <span class="text-[10px] font-black text-blue-400 uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-full border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-500">${groups[name].count} Items</span>
+                </div>`;
             grid.appendChild(div);
         });
         container.appendChild(grid);
     } else {
-        // --- ✅ VIEW 2: โหมดแสดงเกียรติบัตร (GRID CARD STYLE) ---
+        // VIEW 2: โหมดแสดง Card เกียรติบัตร (หลังจากกดเข้าโฟลเดอร์)
         const startIndex = (page - 1) * ACH_ITEMS_PER_PAGE;
         const pageItems = data.slice(startIndex, startIndex + ACH_ITEMS_PER_PAGE);
 
         const header = document.createElement('div');
-        header.className = "flex flex-col sm:flex-row items-center justify-between bg-white/80 backdrop-blur-sm p-6 rounded-[2.5rem] border border-slate-100 shadow-sm mb-10 gap-4 animate-fade-in";
-        header.innerHTML = `<div class="flex items-center gap-4"><div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-500 text-xl shadow-inner"><i class="fa-solid fa-trophy"></i></div><div><h3 class="font-black text-xl text-slate-800 tracking-tight">${currentFolderFilter}</h3><p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">รายการข้อมูล • ${data.length} รายการ</p></div></div><button onclick="window.clearFolderFilter('${containerId}', '${type}')" class="text-[11px] font-black uppercase bg-white px-8 py-3 rounded-full border border-slate-200 shadow-sm hover:bg-slate-800 hover:text-white transition-all duration-300">ย้อนกลับ</button>`;
+        header.className = "flex items-center justify-between bg-white/80 backdrop-blur-sm p-6 rounded-[2.5rem] border border-slate-100 shadow-sm mb-10 animate-fade-in";
+        header.innerHTML = `
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-500 text-xl shadow-inner"><i class="fa-solid fa-award"></i></div>
+                <div>
+                    <h3 class="font-black text-xl text-slate-800 tracking-tight">${currentFolderFilter}</h3>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">พบข้อมูล • ${data.length} รายการ</p>
+                </div>
+            </div>
+            <button onclick="window.clearFolderFilter('${containerId}', '${type}')" class="text-[11px] font-black uppercase bg-white px-8 py-3 rounded-full border border-slate-200 shadow-sm hover:bg-slate-800 hover:text-white transition-all duration-300"><i class="fa-solid fa-arrow-left mr-2"></i>ย้อนกลับ</button>`;
         container.appendChild(header);
 
         const grid = document.createElement('div');
-        grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 animate-fade-in";
+        grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fade-in";
         
         pageItems.forEach(item => {
             const div = document.createElement('div');
             div.className = "group bg-white rounded-[3rem] shadow-lg border border-slate-100 overflow-hidden hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.12)] hover:-translate-y-3 transition-all duration-700 cursor-pointer flex flex-col";
             div.onclick = () => window.open(item.image || item.file_url || '#', '_blank');
             
-            // แสดงผลรูปภาพเกียรติบัตร
-            const certImage = item.image ? `<img src="${item.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-[2s]">` : `<div class="w-full h-full flex items-center justify-center text-slate-200 bg-slate-50"><i class="fa-solid fa-award text-7xl opacity-50"></i></div>`;
-            
             div.innerHTML = `
                 <div class="aspect-[4/3] bg-slate-50 relative overflow-hidden border-b border-slate-50">
-                    ${certImage}
+                    ${item.image ? `<img src="${item.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-[2s]">` : `<div class="w-full h-full flex items-center justify-center text-slate-200"><i class="fa-solid fa-award text-7xl opacity-50"></i></div>`}
                     <div class="absolute top-5 left-5 right-5 flex flex-wrap gap-2">
-                        ${item.subject ? `<span class="bg-blue-600/90 backdrop-blur-md text-white text-[10px] font-black px-3 py-1.5 rounded-xl shadow-lg uppercase tracking-widest">${item.subject}</span>` : ''}
+                        ${item.subject ? getSubjectBadge(item.subject) : ''}
                     </div>
                 </div>
                 <div class="p-8 flex-1 flex flex-col">
-                    <h4 class="font-bold text-xl text-slate-800 mb-3 tracking-tight line-clamp-1">${item.students || item.name || '-'}</h4>
+                    <h4 class="font-bold text-xl text-slate-800 mb-3 tracking-tight">${item.students || item.name || '-'}</h4>
                     <div class="flex items-center gap-2 mb-6">
                         <span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
-                        <p class="text-sm font-black text-blue-600 uppercase tracking-wide">รางวัล: ${item.title || 'เกียรติบัตร'}</p>
+                        <p class="text-sm font-black text-blue-600 uppercase">รางวัล: ${item.title || 'เกียรติบัตร'}</p>
                     </div>
-                    <div class="mt-auto pt-6 border-t border-slate-50">
-                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
-                            <i class="fa-solid fa-calendar-check mr-1.5 text-blue-300"></i> ${item.competition || item.program || '-'}
-                        </p>
+                    <div class="mt-auto pt-6 border-t border-slate-50 font-medium text-slate-400 text-[11px] italic">
+                        รายการ: ${item.competition || item.program || '-'}
                     </div>
-                </div>
-            `;
+                </div>`;
             grid.appendChild(div);
         });
         container.appendChild(grid);
@@ -235,7 +248,6 @@ export function renderAchievementSystem(containerId, data, type, page = 1) {
         renderPagination(pagId, data.length, ACH_ITEMS_PER_PAGE, page, `window.pagedAch_${type}`);
     }
 }
-
 // =============================================================================
 // 4. WINDOW BRIDGES & SEARCH LOGIC
 // =============================================================================

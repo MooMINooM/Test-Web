@@ -89,11 +89,25 @@ export function renderSchoolInfo(dataList) {
         if (el) el.innerText = val || '-';
     }
 
-    // Social Links
+    // ✅ ส่วนจัดการลิงก์โซเชียลแบบยืดหยุ่น (แก้ปัญหาชื่อคอลัมน์ไม่ตรง)
     const fbEl = document.getElementById('footer-facebook');
     const ytEl = document.getElementById('footer-youtube');
-    if (info.facebook_url && fbEl) { fbEl.href = info.facebook_url; fbEl.classList.remove('hidden'); }
-    if (info.youtube_url && ytEl) { ytEl.href = info.youtube_url; ytEl.classList.remove('hidden'); }
+
+    // ดึงค่า Facebook (เช็คทั้งสองชื่อคอลัมน์ที่อาจเป็นไปได้)
+    const fbLink = info.facebook_url || info.facebook; 
+    if (fbLink && fbEl) {
+        fbEl.href = fbLink;
+        fbEl.classList.remove('hidden');
+        console.log("Facebook Link Found:", fbLink); // เช็คใน Console ว่าเจอไหม
+    }
+
+    // ดึงค่า YouTube (เช็คทั้งสองชื่อคอลัมน์ที่อาจเป็นไปได้)
+    const ytLink = info.youtube_url || info.youtube;
+    if (ytLink && ytEl) {
+        ytEl.href = ytLink;
+        ytEl.classList.remove('hidden');
+        console.log("YouTube Link Found:", ytLink); // เช็คใน Console ว่าเจอไหม
+    }
 
     // Logo Handling
     const logoHeader = document.getElementById('header-logo');

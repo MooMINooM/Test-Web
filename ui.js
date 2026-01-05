@@ -145,13 +145,38 @@ export function renderAchievementSystem(containerId, data, type, page = 1) {
 
 window.clearFolderFilter = (cid, type) => { 
     currentFolderFilter = null; 
-    const data = type==='teacher'?allTeacherData : (type==='student'?allStudentData : allSchoolData); 
+    let data = [];
+    
+    // เลือกชุดข้อมูลให้ตรงกับประเภทของหน้านั้นๆ
+    if (type === 'teacher') data = allTeacherData;
+    else if (type === 'student') data = allStudentData;
+    else if (type === 'school') data = allSchoolData.filter(i => !['O-NET','NT','RT'].some(k => (i.title+i.competition).includes(k)));
+    else if (type === 'onet') data = onetData;
+    else if (type === 'nt') data = ntData;
+    else if (type === 'rt') data = rtData;
+    
     renderAchievementSystem(cid, data, type, 1); 
 };
 
+// Pagination Bridges
+window.pagedAch_teacher = (p) => renderAchievementSystem('teacher-achievements-container', allTeacherData, 'teacher', p);
+window.pagedAch_student = (p) => renderAchievementSystem('student-achievements-container', allStudentData, 'student', p);
+window.pagedAch_school = (p) => renderAchievementSystem('school-achievements-container', allSchoolData, 'school', p);
+window.pagedAch_onet = (p) => renderAchievementSystem('onet-container', onetData, 'onet', p);
+window.pagedAch_nt = (p) => renderAchievementSystem('nt-container', ntData, 'nt', p);
+window.pagedAch_rt = (p) => renderAchievementSystem('rt-container', rtData, 'rt', p);
+
+// Folder Select logic
 window.selectFolder = (cid, type, name) => { 
     currentFolderFilter = name; 
-    const data = type==='teacher'?allTeacherData : (type==='student'?allStudentData : allSchoolData); 
+    let data = [];
+    if (type === 'teacher') data = allTeacherData;
+    else if (type === 'student') data = allStudentData;
+    else if (type === 'school') data = allSchoolData;
+    else if (type === 'onet') data = onetData;
+    else if (type === 'nt') data = ntData;
+    else if (type === 'rt') data = rtData;
+    
     renderAchievementSystem(cid, data, type, 1); 
 };
 

@@ -1,9 +1,13 @@
 // js/ui.js - Lumina Bento Edition (Achievement List Style)
 
 // --- Global Variables ---
+// --- Global Variables (Data Persistence Layer) ---
 let allTeacherData = [];
 let allStudentData = [];
 let allSchoolData = [];
+let onetData = []; // เพิ่มใหม่
+let ntData = [];   // เพิ่มใหม่
+let rtData = [];   // เพิ่มใหม่
 let allNewsData = [];
 let allOfficialDocs = [];
 let allFormDocs = [];
@@ -248,15 +252,28 @@ export function renderSchoolInfo(dataList) {
 export function renderTeacherAchievements(data) { allTeacherData = data; renderAchievementSystem('teacher-achievements-container', data, 'teacher'); }
 export function renderStudentAchievements(data) { allStudentData = data; renderAchievementSystem('student-achievements-container', data, 'student'); }
 export function renderSchoolAchievements(data) { 
+    if (!data) return;
     allSchoolData = data; 
-    const onet = allSchoolData.filter(i => (i.title + i.competition).includes('O-NET'));
-    const nt = allSchoolData.filter(i => (i.title + i.competition).includes('NT'));
-    const rt = allSchoolData.filter(i => (i.title + i.competition).includes('RT'));
-    const general = allSchoolData.filter(i => !(i.title + i.competition).includes('O-NET') && !(i.title + i.competition).includes('NT') && !(i.title + i.competition).includes('RT'));
+    
+    // แยกข้อมูลเก็บไว้เป็นอิสระต่อกัน เพื่อให้กดย้อนกลับแล้วไม่ปนกัน
+    onetData = allSchoolData.filter(i => (i.title + i.competition).includes('O-NET'));
+    ntData = allSchoolData.filter(i => (i.title + i.competition).includes('NT'));
+    rtData = allSchoolData.filter(i => (i.title + i.competition).includes('RT'));
+    
+    const general = allSchoolData.filter(i => 
+        !(i.title + i.competition).includes('O-NET') && 
+        !(i.title + i.competition).includes('NT') && 
+        !(i.title + i.competition).includes('RT')
+    );
+
+    // แสดงผลหน้าหลัก (สถานศึกษา)
     renderAchievementSystem('school-achievements-container', general, 'school'); 
-    if(document.getElementById('onet-container')) renderAchievementSystem('onet-container', onet, 'school');
-    if(document.getElementById('nt-container')) renderAchievementSystem('nt-container', nt, 'school');
-    if(document.getElementById('rt-container')) renderAchievementSystem('rt-container', rt, 'school');
+
+    // แสดงผลหน้าแยก (O-NET/NT/RT)
+    if(document.getElementById('onet-container')) renderAchievementSystem('onet-container', onetData, 'onet');
+    if(document.getElementById('nt-container')) renderAchievementSystem('nt-container', ntData, 'nt');
+    if(document.getElementById('rt-container')) renderAchievementSystem('rt-container', rtData, 'rt');
+}
 }
 
 export function renderNews(data, page = 1) {

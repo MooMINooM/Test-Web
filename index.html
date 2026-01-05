@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โรงเรียนบ้านภูพระโนนผักหวาน</title>
+    <title>โรงเรียนบ้...</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -122,13 +122,15 @@
                 
                 <div class="py-2 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50/50 rounded-lg mt-2">โรงเรียน</div>
                 <a href="#" data-page="school-basic" class="block py-2.5 px-4 text-slate-600 pl-8 flex items-center gap-3"><i class="fa-solid fa-id-card text-blue-500 text-sm"></i> ข้อมูลพื้นฐาน</a>
-                <a href="#" data-page="personnel-list" class="block py-2.5 px-4 text-slate-600 pl-8 flex items-center gap-3"><i class="fa-solid fa-user-tie text-purple-500 text-sm"></i> บุคลากร</a>
-                <a href="#" data-page="students" class="block py-2.5 px-4 text-slate-600 pl-8 flex items-center gap-3"><i class="fa-solid fa-child-reaching text-pink-500 text-sm"></i> นักเรียน</a>
+                <a href="#" data-page="school-about" class="block py-2.5 px-4 text-slate-600 pl-8 flex items-center gap-3"><i class="fa-solid fa-school text-orange-500 text-sm"></i> เกี่ยวกับโรงเรียน</a>
+                <a href="#" data-page="personnel-list" class="block py-2.5 px-4 text-slate-600 pl-8 flex items-center gap-3"><i class="fa-solid fa-user-tie text-purple-500 text-sm"></i> บุคลากรปัจจุบัน</a>
+                <a href="#" data-page="students" class="block py-2.5 px-4 text-slate-600 pl-8 flex items-center gap-3"><i class="fa-solid fa-child-reaching text-pink-500 text-sm"></i> ข้อมูลนักเรียน</a>
 
                 <div class="py-2 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50/50 rounded-lg mt-2">ผลงาน/ข่าว</div>
                 <a href="#" data-page="news" class="block py-2.5 px-4 text-slate-600 pl-8 flex items-center gap-3"><i class="fa-solid fa-newspaper text-blue-500 text-sm"></i> ข่าวประชาสัมพันธ์</a>
                 <a href="#" data-page="teacher-achievements" class="block py-2.5 px-4 text-slate-600 pl-8 flex items-center gap-3"><i class="fa-solid fa-medal text-amber-500 text-sm"></i> ผลงานครู</a>
                 <a href="#" data-page="student-achievements" class="block py-2.5 px-4 text-slate-600 pl-8 flex items-center gap-3"><i class="fa-solid fa-trophy text-yellow-500 text-sm"></i> ผลงานนักเรียน</a>
+                <a href="#" data-page="school-achievements" class="block py-2.5 px-4 text-slate-600 pl-8 flex items-center gap-3"><i class="fa-solid fa-award text-indigo-500 text-sm"></i> ผลงานสถานศึกษา</a>
 
                 <div class="py-2 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50/50 rounded-lg mt-2">ผลสัมฤทธิ์</div>
                 <a href="#" data-page="academic-onet" class="block py-2.5 px-4 text-green-600 pl-8 flex items-center gap-3 font-bold"><i class="fa-solid fa-chart-line text-sm"></i> O-NET</a>
@@ -143,9 +145,9 @@
                     <i class="fa-solid fa-lightbulb"></i> นวัตกรรม
                 </a>
 
-                <div class="pt-4 px-4">
-                    <button onclick="document.getElementById('login-modal').classList.remove('hidden')" class="w-full py-3 bg-slate-800 text-white rounded-xl font-bold flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-lock"></i> เข้าสู่ระบบผู้ดูแล
+                <div class="pt-4 px-4 border-t border-slate-100 mt-4">
+                    <button onclick="document.getElementById('login-modal').classList.remove('hidden'); document.getElementById('mobile-menu').classList.add('hidden')" class="w-full py-3 bg-slate-800 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-transform">
+                        <i class="fa-solid fa-lock text-xs"></i> เข้าสู่ระบบผู้ดูแล
                     </button>
                 </div>
             </div>
@@ -257,7 +259,7 @@
     </div>
 </section>
             
-            <section id="page-school-basic" class="page-content hidden">
+       <section id="page-school-basic" class="page-content hidden">
     <div class="max-w-7xl mx-auto animate-fade-in relative pb-16 space-y-10">
         
         <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-100 rounded-full mix-blend-multiply filter blur-[80px] opacity-40 animate-pulse pointer-events-none"></div>
@@ -388,42 +390,6 @@
             </div>
 
         </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-            <div class="group relative bg-white rounded-[2rem] p-8 shadow-xl border border-slate-100 hover:border-slate-200 hover:shadow-xl hover:-translate-y-1 transition duration-500 overflow-hidden">
-                <div class="absolute bottom-0 left-0 w-32 h-32 bg-slate-50 rounded-full blur-[50px] opacity-60 group-hover:opacity-100 transition duration-700 pointer-events-none"></div>
-                <div class="relative z-10 flex flex-col sm:flex-row gap-6 items-start h-full">
-                    <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-3xl text-slate-500 shadow-sm flex-shrink-0 group-hover:rotate-12 group-hover:scale-110 transition duration-500">
-                        <i class="fa-solid fa-palette"></i>
-                    </div>
-                    <div class="flex-1 flex flex-col h-full">
-                        <h3 class="text-2xl font-bold text-slate-800 mb-3 tracking-wide flex items-center gap-3">สีประจำโรงเรียน <span class="text-[10px] font-normal text-slate-400 uppercase tracking-widest border border-slate-200 px-2 py-0.5 rounded-full">Color</span></h3>
-                        <div class="flex-grow flex items-center w-full">
-                            <div id="school-color-box" class="w-full h-20 rounded-2xl shadow-inner border border-slate-100 ring-4 ring-white transition-all duration-700 bg-slate-200"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="lg:col-span-1 group relative bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl border border-slate-800 hover:-translate-y-1 transition duration-500 overflow-hidden text-white">
-                <div class="absolute top-0 right-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-[80px] pointer-events-none"></div>
-                <div class="relative z-10 flex flex-col md:flex-row gap-8 items-start h-full">
-                    <div class="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center text-3xl text-white shadow-inner flex-shrink-0 border border-white/10 group-hover:bg-white group-hover:text-slate-900 group-hover:rotate-12 group-hover:scale-110 transition duration-500">
-                        <i class="fa-solid fa-shirt"></i>
-                    </div>
-                    <div class="flex-1 w-full">
-                        <h3 class="text-2xl font-bold text-white mb-6 tracking-wide flex items-center gap-3">เครื่องแบบนักเรียน <span class="text-[10px] font-normal text-slate-400 uppercase tracking-widest border border-slate-700 px-2 py-0.5 rounded-full">Uniform</span></h3>
-                        <div class="w-full bg-white/5 rounded-2xl border border-white/10 p-6 flex items-center justify-center min-h-[300px] relative overflow-hidden backdrop-blur-sm group-hover:bg-white/10 transition duration-500">
-                            <img id="student-uniform-img" src="" alt="Uniform" class="max-h-[300px] w-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] group-hover:scale-105 transition duration-500 hidden">
-                            <div id="uniform-placeholder" class="text-slate-500 flex flex-col items-center">
-                                <i class="fa-solid fa-image text-5xl mb-2 opacity-50"></i>
-                                <span class="text-sm tracking-widest uppercase">No Image Available</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 </section>
 
@@ -505,7 +471,7 @@
             <div class="group relative bg-white rounded-[2rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-sky-50 hover:border-sky-100 hover:shadow-[0_20px_50px_-10px_rgba(14,165,233,0.15)] hover:-translate-y-1 transition duration-500 overflow-hidden">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-sky-50 rounded-full blur-[50px] opacity-60 group-hover:opacity-100 transition duration-700 pointer-events-none"></div>
                 <div class="relative z-10 flex flex-col sm:flex-row gap-6 items-start h-full">
-                    <div class="w-16 h-16 bg-sky-50 rounded-2xl flex items-center justify-center text-3xl text-sky-600 shadow-sm flex-shrink-0 group-hover:rotate-12 transition duration-500">
+                    <div class="w-16 h-16 bg-sky-50 rounded-2xl flex items-center justify-center text-3xl text-sky-600 shadow-sm flex-shrink-0 group-hover:rotate-12 group-hover:scale-110 transition duration-500">
                         <i class="fa-solid fa-eye"></i>
                     </div>
                     <div class="flex-1 flex flex-col h-full">
@@ -520,7 +486,7 @@
             <div class="group relative bg-white rounded-[2rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-cyan-50 hover:border-cyan-100 hover:shadow-[0_20px_50px_-10px_rgba(6,182,212,0.15)] hover:-translate-y-1 transition duration-500 overflow-hidden">
                 <div class="absolute bottom-0 left-0 w-32 h-32 bg-cyan-50 rounded-full blur-[50px] opacity-60 group-hover:opacity-100 transition duration-700 pointer-events-none"></div>
                 <div class="relative z-10 flex flex-col sm:flex-row gap-6 items-start h-full">
-                    <div class="w-16 h-16 bg-cyan-50 rounded-2xl flex items-center justify-center text-3xl text-cyan-600 shadow-sm flex-shrink-0 group-hover:rotate-12 transition duration-500">
+                    <div class="w-16 h-16 bg-cyan-50 rounded-2xl flex items-center justify-center text-3xl text-cyan-600 shadow-sm flex-shrink-0 group-hover:rotate-12 group-hover:scale-110 transition duration-500">
                         <i class="fa-solid fa-fingerprint"></i>
                     </div>
                     <div class="flex-1 flex flex-col h-full">
@@ -535,7 +501,7 @@
             <div class="group relative bg-white rounded-[2rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-rose-50 hover:border-rose-100 hover:shadow-[0_20px_50px_-10px_rgba(244,63,94,0.15)] hover:-translate-y-1 transition duration-500 overflow-hidden">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-rose-50 rounded-full blur-[50px] opacity-60 group-hover:opacity-100 transition duration-700 pointer-events-none"></div>
                 <div class="relative z-10 flex flex-col sm:flex-row gap-6 items-start h-full">
-                    <div class="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center text-3xl text-rose-500 shadow-sm flex-shrink-0 group-hover:rotate-12 transition duration-500">
+                    <div class="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center text-3xl text-rose-500 shadow-sm flex-shrink-0 group-hover:rotate-12 group-hover:scale-110 transition duration-500">
                         <i class="fa-solid fa-star"></i>
                     </div>
                     <div class="flex-1 flex flex-col h-full">

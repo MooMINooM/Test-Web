@@ -64,7 +64,15 @@ export function renderSchoolInfo(dataList) {
     if (!dataList) return;
     const info = Array.isArray(dataList) ? dataList[0] : dataList;
     if (!info) return;
-    if (info.school_name) document.title = info.school_name;
+
+    // --- ส่วนที่ใช้แสดงชื่อโรงเรียนใน Hero Banner ---
+    const heroNameEl = document.getElementById('hero-school-name-short');
+    if (heroNameEl) {
+        // ดึงชื่อโรงเรียนมา แล้วตัดคำว่า "โรงเรียน" ออกเพื่อให้ชื่อสั้นลง
+        let shortName = (info.school_name || 'โรงเรียน').replace('โรงเรียน', '').trim();
+        heroNameEl.innerText = `"${shortName}"`; // ใส่เครื่องหมายคำพูดครอบชื่อ
+    }
+    // -------------------------------------------
 
     const mapping = {
         'header-school-name': info.school_name, 'header-affiliation': info.affiliation, 'hero-motto': info.motto,

@@ -1,6 +1,7 @@
-// js/ui.js - Lumina Bento Edition (Full Stability & Logo + VTR Fixed)
+// js/ui.js - Lumina Bento Edition (Final Super Full Version)
+// Optimized for: VTR, Logo, Search (News, Innovations, Achievements) & Pagination
 
-// --- Global Variables ---
+// --- Global Variables (Data Persistence) ---
 let allTeacherData = [];
 let allStudentData = [];
 let allSchoolData = [];
@@ -55,7 +56,7 @@ function getSubjectBadge(subject) {
 }
 
 // =============================================================================
-// 2. SCHOOL INFO RENDERER (✅ FIXED: Logo & VTR Loading Logic)
+// 2. SCHOOL INFO RENDERER (VTR & Logo Fix Included)
 // =============================================================================
 
 export function renderSchoolInfo(dataList) {
@@ -83,20 +84,14 @@ export function renderSchoolInfo(dataList) {
         document.getElementById('hero-school-name-short').innerText = `"${shortName}"`;
     }
 
-    // --- ✅ FIXED LOGO LOGIC (แก้ปัญหาโลโก้มุมซ้ายบนหาย) ---
     const logoHeader = document.getElementById('header-logo');
     const logoBasic = document.getElementById('header-logo-basic');
     const logoPlaceholder = document.getElementById('logo-placeholder');
-
     if (info.logo_url) {
-        if (logoHeader) {
-            logoHeader.src = info.logo_url;
-            logoHeader.classList.remove('hidden'); // แสดงโลโก้มุมซ้ายบน
-        }
-        if (logoBasic) {
-            logoBasic.src = info.logo_url;
-            logoBasic.classList.remove('hidden'); // แสดงโลโก้ในหน้าข้อมูลพื้นฐาน
-            if (logoPlaceholder) logoPlaceholder.classList.add('hidden');
+        if (logoHeader) { logoHeader.src = info.logo_url; logoHeader.classList.remove('hidden'); }
+        if (logoBasic) { 
+            logoBasic.src = info.logo_url; logoBasic.classList.remove('hidden'); 
+            if(logoPlaceholder) logoPlaceholder.classList.add('hidden');
         }
     }
 
@@ -105,23 +100,16 @@ export function renderSchoolInfo(dataList) {
         document.getElementById('school-color-box').style.background = `linear-gradient(135deg, ${c1} 50%, ${info.color_code_2 || c1} 50%)`;
     }
 
-    // --- ✅ FIXED VTR LOGIC ---
     if (info.vtr_url && document.getElementById('vtr-iframe')) {
         let videoId = "";
         try {
-            if (info.vtr_url.includes('v=')) {
-                videoId = info.vtr_url.split('v=')[1].split('&')[0];
-            } else if (info.vtr_url.includes('youtu.be/')) {
-                videoId = info.vtr_url.split('youtu.be/')[1].split('?')[0];
-            } else if (info.vtr_url.includes('embed/')) {
-                videoId = info.vtr_url.split('embed/')[1].split('?')[0];
-            }
-        } catch (e) { console.error("VTR URL Error:", e); }
-
+            if (info.vtr_url.includes('v=')) videoId = info.vtr_url.split('v=')[1].split('&')[0];
+            else if (info.vtr_url.includes('youtu.be/')) videoId = info.vtr_url.split('youtu.be/')[1].split('?')[0];
+            else if (info.vtr_url.includes('embed/')) videoId = info.vtr_url.split('embed/')[1].split('?')[0];
+        } catch (e) {}
         if (videoId) {
             document.getElementById('vtr-iframe').src = `https://www.youtube.com/embed/${videoId}`;
-            const vtrPlaceholder = document.getElementById('vtr-placeholder');
-            if(vtrPlaceholder) vtrPlaceholder.classList.add('hidden');
+            if(document.getElementById('vtr-placeholder')) document.getElementById('vtr-placeholder').classList.add('hidden');
         }
     }
 
@@ -133,7 +121,7 @@ export function renderSchoolInfo(dataList) {
 }
 
 // =============================================================================
-// 3. ACHIEVEMENT SYSTEM
+// 3. ACHIEVEMENT SYSTEM (Folder + List View)
 // =============================================================================
 
 export function renderAchievementSystem(containerId, data, type, page = 1) {
@@ -165,13 +153,12 @@ export function renderAchievementSystem(containerId, data, type, page = 1) {
         });
         container.appendChild(grid);
     } else {
-        const filtered = data.filter(item => (item.competition || 'รายการอื่นๆ') === currentFolderFilter);
-        const startIndex = (page - 1) * ACH_ITEMS_PER_PAGE;
-        const pageItems = filtered.slice(startIndex, startIndex + ACH_ITEMS_PER_PAGE);
+        const start = (page - 1) * ACH_ITEMS_PER_PAGE;
+        const pageItems = data.slice(start, start + ACH_ITEMS_PER_PAGE);
 
         const header = document.createElement('div');
         header.className = "flex flex-col sm:flex-row items-center justify-between bg-white/80 backdrop-blur-sm p-6 rounded-[2.5rem] border border-slate-100 shadow-sm mb-10 gap-4 animate-fade-in";
-        header.innerHTML = `<div class="flex items-center gap-4"><div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 text-xl shadow-inner"><i class="fa-solid fa-folder-open"></i></div><div><h3 class="font-black text-xl text-slate-800 tracking-tight">${currentFolderFilter}</h3><p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">พบข้อมูล • ${filtered.length} Items</p></div></div><button onclick="window.clearFolderFilter('${containerId}', '${type}')" class="text-[11px] font-black uppercase bg-white px-8 py-3 rounded-full border border-slate-200 shadow-sm hover:bg-slate-800 hover:text-white transition-all duration-300"><i class="fa-solid fa-arrow-left mr-2"></i>ย้อนกลับ</button>`;
+        header.innerHTML = `<div class="flex items-center gap-4"><div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 text-xl shadow-inner"><i class="fa-solid fa-folder-open"></i></div><div><h3 class="font-black text-xl text-slate-800 tracking-tight">${currentFolderFilter}</h3><p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">รายการข้อมูล • ${data.length} รายการ</p></div></div><button onclick="window.clearFolderFilter('${containerId}', '${type}')" class="text-[11px] font-black uppercase bg-white px-8 py-3 rounded-full border border-slate-200 shadow-sm hover:bg-slate-800 hover:text-white transition-all duration-300"><i class="fa-solid fa-arrow-left mr-2"></i>ย้อนกลับ</button>`;
         container.appendChild(header);
 
         const grid = document.createElement('div');
@@ -188,77 +175,73 @@ export function renderAchievementSystem(containerId, data, type, page = 1) {
         const pagId = `${containerId}-pagination`;
         let pagDiv = document.getElementById(pagId);
         if(!pagDiv) { pagDiv = document.createElement('div'); pagDiv.id = pagId; container.appendChild(pagDiv); }
-        renderPagination(pagId, filtered.length, ACH_ITEMS_PER_PAGE, page, `window.pagedAch_${type}`);
+        renderPagination(pagId, data.length, ACH_ITEMS_PER_PAGE, page, `window.pagedAch_${type}`);
     }
 }
 
 // =============================================================================
-// 4. NEWS SYSTEM
+// 4. NEWS & INNOVATION RENDERERS
 // =============================================================================
 
 export function renderNews(data, page = 1) {
     if (!data) return;
     if (allNewsData.length === 0 || data.length > allNewsData.length) { allNewsData = data; }
-
     const container = document.getElementById('news-container');
     if (!container) return;
     container.innerHTML = '';
-
     const start = (page - 1) * NEWS_ITEMS_PER_PAGE;
     const items = data.slice(start, start + NEWS_ITEMS_PER_PAGE);
-
-    if (items.length === 0) {
-        container.innerHTML = '<div class="text-center p-20 text-slate-400 font-medium bg-white/50 rounded-[2rem] border border-dashed border-slate-200">ไม่พบข่าวสาร</div>';
-        return;
-    }
-
+    if (items.length === 0) { container.innerHTML = '<div class="text-center p-20 text-slate-400 font-medium bg-white/50 rounded-[2rem] border border-dashed border-slate-200">ไม่พบข่าวสาร</div>'; return; }
     items.forEach(news => {
         const div = document.createElement('div');
         div.className = "bg-white/80 backdrop-blur-sm border border-slate-100 rounded-[2rem] p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 flex flex-col md:flex-row gap-6 mb-6 group cursor-pointer";
         div.onclick = () => { if(news.link) window.open(news.link, '_blank'); };
-        div.innerHTML = `<div class="w-full md:w-64 h-48 bg-slate-100 rounded-[1.5rem] overflow-hidden shrink-0 shadow-inner relative">${news.image ? `<img src="${news.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-[1.5s]">` : `<div class="w-full h-full flex items-center justify-center text-slate-300"><i class="fa-regular fa-image text-4xl"></i></div>`}<div class="absolute top-3 left-3 bg-white/90 backdrop-blur px-3 py-1 rounded-lg text-[9px] font-black text-slate-500 border border-white uppercase tracking-wider">News</div></div><div class="flex-1 flex flex-col justify-between py-1"><div class="space-y-3"><h4 class="font-bold text-xl text-slate-800 group-hover:text-blue-600 transition-colors duration-300 leading-snug line-clamp-2">${news.title}</h4><p class="text-slate-500 line-clamp-2 font-light text-sm leading-relaxed">อ่านรายละเอียดกิจกรรมประชาสัมพันธ์ประจำวันที่ ${new Date(news.date).toLocaleDateString('th-TH')}</p></div><div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-50"><span class="inline-flex items-center gap-2 text-[11px] font-bold text-slate-400"><i class="fa-regular fa-clock text-blue-400"></i> ${new Date(news.date).toLocaleDateString('th-TH')}</span><span class="text-blue-600 text-[10px] font-black uppercase tracking-widest group-hover:translate-x-2 transition-transform duration-300 flex items-center gap-1">Read More <i class="fa-solid fa-arrow-right"></i></span></div></div>`;
+        div.innerHTML = `<div class="w-full md:w-64 h-48 bg-slate-100 rounded-[1.5rem] overflow-hidden shrink-0 shadow-inner relative">${news.image ? `<img src="${news.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-[1.5s]">` : `<div class="w-full h-full flex items-center justify-center text-slate-300"><i class="fa-regular fa-image text-4xl"></i></div>`}<div class="absolute top-3 left-3 bg-white/90 backdrop-blur px-3 py-1 rounded-lg text-[9px] font-black text-slate-500 border border-white uppercase tracking-wider">News</div></div><div class="flex-1 flex flex-col justify-between py-1"><div class="space-y-3"><h4 class="font-bold text-xl text-slate-800 group-hover:text-blue-600 transition-colors duration-300 leading-snug line-clamp-2">${news.title}</h4><p class="text-slate-500 line-clamp-2 font-light text-sm leading-relaxed">คลิกเพื่ออ่านรายละเอียดประชาสัมพันธ์ประจำวันที่ ${new Date(news.date).toLocaleDateString('th-TH')}</p></div><div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-50"><span class="inline-flex items-center gap-2 text-[11px] font-bold text-slate-400"><i class="fa-regular fa-clock text-blue-400"></i> ${new Date(news.date).toLocaleDateString('th-TH')}</span><span class="text-blue-600 text-[10px] font-black uppercase tracking-widest group-hover:translate-x-2 transition-transform duration-300 flex items-center gap-1">Read More <i class="fa-solid fa-arrow-right"></i></span></div></div>`;
         container.appendChild(div);
     });
-
     renderPagination('news-pagination', data.length, NEWS_ITEMS_PER_PAGE, page, "window.pagedNews");
 }
 
-// =============================================================================
-// 5. INNOVATION SYSTEM
-// =============================================================================
-
 export function renderInnovations(data, page = 1) {
+    if (data && data.length > 0 && (allInnovationsData.length === 0 || data.length > allInnovationsData.length)) { allInnovationsData = data; }
     const container = document.getElementById('innovations-container');
     if (!container) return;
-    
-    if (data && data.length > 0 && (allInnovationsData.length === 0 || data.length > allInnovationsData.length)) { 
-        allInnovationsData = data; 
-    }
-
     container.innerHTML = '';
-    if (!data || data.length === 0) {
-        container.innerHTML = '<div class="col-span-full text-center py-20 bg-white/50 rounded-[2.5rem] border border-dashed border-slate-200 text-slate-400 font-medium">ไม่พบผลงานนวัตกรรม</div>';
-        return;
-    }
-
+    if (!data || data.length === 0) { container.innerHTML = '<div class="col-span-full text-center py-20 bg-white/50 rounded-[2.5rem] border border-dashed border-slate-200 text-slate-400 font-medium">ไม่พบผลงานนวัตกรรม</div>'; return; }
     const start = (page - 1) * INNOV_ITEMS_PER_PAGE;
     const items = data.slice(start, start + INNOV_ITEMS_PER_PAGE);
-
     container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fade-in";
     items.forEach(item => {
         const div = document.createElement('div');
         div.className = "group bg-white rounded-[2.5rem] shadow-lg border border-slate-100 overflow-hidden hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.12)] hover:-translate-y-2 transition-all duration-700 cursor-pointer flex flex-col";
         div.onclick = () => window.open(item.fileUrl, '_blank');
-        div.innerHTML = `<div class="aspect-[16/10] bg-slate-50 relative overflow-hidden">${item.coverImageUrl ? `<img src="${item.coverImageUrl}" class="w-full h-full object-cover group-hover:scale-110 transition duration-[2s]">` : '<div class="w-full h-full flex items-center justify-center"><i class="fa-solid fa-lightbulb text-6xl text-slate-200"></i></div>'}<div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-xl text-[10px] font-black text-blue-600 shadow-sm border border-white uppercase tracking-widest">${item.subject || 'Creative'}</div></div><div class="p-6 flex-1 flex flex-col"><h4 class="font-bold text-lg text-slate-800 line-clamp-2 h-14 group-hover:text-blue-600 transition-colors leading-snug">${item.title}</h4><div class="mt-auto pt-5 border-t border-slate-50"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 shadow-inner group-hover:bg-blue-600 group-hover:text-white transition-colors duration-500"><i class="fa-solid fa-user-pen text-sm"></i></div><div class="min-w-0"><p class="text-xs font-black text-slate-700 truncate uppercase tracking-tight">${item.creator || '-'}</p><p class="text-[10px] font-bold text-slate-400 uppercase mt-0.5 italic">ระดับ: ${item.class || '-'}</p></div></div></div></div>`;
+        div.innerHTML = `<div class="aspect-[16/10] bg-slate-50 relative overflow-hidden">${item.coverImageUrl ? `<img src="${item.coverImageUrl}" class="w-full h-full object-cover group-hover:scale-110 transition duration-[2s]">` : '<div class="w-full h-full flex items-center justify-center"><i class="fa-solid fa-lightbulb text-6xl text-slate-200"></i></div>'}<div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-xl text-[10px] font-black text-blue-600 shadow-sm border border-white uppercase tracking-widest">${item.subject || 'Innovation'}</div></div><div class="p-6 flex-1 flex flex-col"><h4 class="font-bold text-lg text-slate-800 line-clamp-2 h-14 group-hover:text-blue-600 transition-colors leading-snug">${item.title}</h4><div class="mt-auto pt-5 border-t border-slate-50"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 shadow-inner group-hover:bg-blue-600 group-hover:text-white transition-colors duration-500"><i class="fa-solid fa-user-pen text-sm"></i></div><div class="min-w-0"><p class="text-xs font-black text-slate-700 truncate uppercase tracking-tight">${item.creator || '-'}</p><p class="text-[10px] font-bold text-slate-400 uppercase mt-0.5 italic">ระดับ: ${item.class || '-'}</p></div></div></div></div>`;
         container.appendChild(div);
     });
-
     renderPagination('innovations-pagination', data.length, INNOV_ITEMS_PER_PAGE, page, "window.pagedInnovations");
 }
 
 // =============================================================================
-// 6. WINDOW BRIDGES & ACTION HANDLERS
+// 5. SEARCH LOGIC (✅ UPDATED: Support All Fields for Achievements)
 // =============================================================================
+
+window.filterAchievements = (inputId, type, containerId) => {
+    const val = document.getElementById(inputId).value.toLowerCase().trim();
+    // ดึงข้อมูลต้นฉบับจากตัวแปร Global
+    const source = type==='teacher' ? allTeacherData : (type==='student' ? allStudentData : allSchoolData);
+    
+    // คัดกรองครอบคลุม: ชื่อคน, รางวัล, รายการแข่งขัน, และแท็กวิชา
+    const filtered = source.filter(i => {
+        const text = [
+            i.title, i.students, i.name, i.competition, i.program, i.subject
+        ].join(' ').toLowerCase();
+        return text.includes(val);
+    });
+
+    // หากมีการพิมพ์ค้นหา ให้เปลี่ยน View เป็นโหมดแสดงผลรายการ (List) ไม่ใช่โหมด Folder
+    currentFolderFilter = val ? `ผลการค้นหา: "${val}"` : null;
+    renderAchievementSystem(containerId, filtered, type, 1);
+};
 
 window.filterNews = (inputId) => {
     const val = document.getElementById(inputId).value.toLowerCase().trim();
@@ -268,17 +251,16 @@ window.filterNews = (inputId) => {
 
 window.filterInnovations = (inputId) => {
     const val = document.getElementById(inputId).value.toLowerCase().trim();
-    const filtered = allInnovationsData.filter(i => (i.title + i.creator + (i.subject||'')).toLowerCase().includes(val));
+    const filtered = allInnovationsData.filter(i => {
+        const text = [i.title, i.creator, i.subject].join(' ').toLowerCase();
+        return text.includes(val);
+    });
     renderInnovations(filtered, 1);
 };
 
-window.filterAchievements = (inputId, type, containerId) => {
-    const val = document.getElementById(inputId).value.toLowerCase().trim();
-    const source = type==='teacher' ? allTeacherData : (type==='student' ? allStudentData : allSchoolData);
-    const filtered = source.filter(i => (i.title + (i.students||'') + (i.name||'') + (i.competition || '')).toLowerCase().includes(val));
-    currentFolderFilter = val ? 'ผลการค้นหา' : null;
-    renderAchievementSystem(containerId, filtered, type, 1);
-};
+// =============================================================================
+// 6. PAGINATION & NAVIGATION BRIDGES
+// =============================================================================
 
 window.pagedNews = (p) => renderNews(allNewsData, p);
 window.pagedInnovations = (p) => renderInnovations(allInnovationsData, p);
@@ -286,13 +268,21 @@ window.pagedAch_teacher = (p) => renderAchievementSystem('teacher-achievements-c
 window.pagedAch_student = (p) => renderAchievementSystem('student-achievements-container', allStudentData, 'student', p);
 window.pagedAch_school = (p) => renderAchievementSystem('school-achievements-container', allSchoolData, 'school', p);
 
-window.selectFolder = (cid, type, name) => { currentFolderFilter = name; const data = type==='teacher'?allTeacherData : (type==='student'?allStudentData : allSchoolData); renderAchievementSystem(cid, data, type, 1); };
-window.clearFolderFilter = (cid, type) => { currentFolderFilter = null; const data = type==='teacher'?allTeacherData : (type==='student'?allStudentData : allSchoolData); renderAchievementSystem(cid, data, type, 1); };
-window.selectDocFolder = (cid, type, catName) => { currentDocFolder[type] = catName; const data = type === 'official' ? allOfficialDocs : allFormDocs; renderDocumentSystem(data, cid, type, 1); };
-window.clearDocFolder = (cid, type) => { currentDocFolder[type] = null; const data = type === 'official' ? allOfficialDocs : allFormDocs; renderDocumentSystem(data, cid, type, 1); };
+window.selectFolder = (cid, type, name) => { 
+    currentFolderFilter = name; 
+    const data = type==='teacher'?allTeacherData : (type==='student'?allStudentData : allSchoolData); 
+    const filtered = data.filter(i => (i.competition || 'รายการอื่นๆ') === name);
+    renderAchievementSystem(cid, filtered, type, 1); 
+};
+
+window.clearFolderFilter = (cid, type) => { 
+    currentFolderFilter = null; 
+    const data = type==='teacher'?allTeacherData : (type==='student'?allStudentData : allSchoolData); 
+    renderAchievementSystem(cid, data, type, 1); 
+};
 
 // =============================================================================
-// 7. REMAINING RENDERERS
+// 7. REMAINING RENDERERS (Personnel, History, Stats, Documents)
 // =============================================================================
 
 export function renderTeacherAchievements(data) { allTeacherData = data; renderAchievementSystem('teacher-achievements-container', data, 'teacher'); }
@@ -316,7 +306,7 @@ export function renderDocumentSystem(data, containerId, type = 'official', page 
     if (current === null) {
         const groups = data.reduce((acc, item) => { const key = item.category || 'ทั่วไป'; if (!acc[key]) acc[key] = 0; acc[key]++; return acc; }, {});
         const grid = document.createElement('div'); grid.className = "grid grid-cols-2 md:grid-cols-4 gap-6 animate-fade-in";
-        Object.entries(groups).forEach(([name, count]) => { grid.innerHTML += `<div onclick="window.selectDocFolder('${containerId}', '${type}', '${name}')" class="group bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-amber-200 hover:-translate-y-2 transition-all duration-500 cursor-pointer text-center relative overflow-hidden"><div class="absolute top-0 right-0 w-20 h-20 bg-amber-50 rounded-bl-[3rem] -mr-8 -mt-8"></div><div class="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-3xl text-amber-500 mx-auto mb-4 relative z-10 group-hover:scale-110 transition duration-500"><i class="fa-solid fa-folder-closed"></i></div><h4 class="font-bold text-slate-700 text-sm line-clamp-1 relative z-10">${name}</h4><div class="mt-3 relative z-10"><span class="text-[9px] font-black text-amber-500 bg-white px-3 py-1 rounded-full border border-amber-50">${count} Files</span></div></div>`; });
+        Object.entries(groups).forEach(([name, count]) => { grid.innerHTML += `<div onclick="window.selectDocFolder('${containerId}', '${type}', '${name}')" class="group bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-amber-200 transition-all duration-500 cursor-pointer text-center relative overflow-hidden"><div class="absolute top-0 right-0 w-20 h-20 bg-amber-50 rounded-bl-[3rem] -mr-8 -mt-8"></div><div class="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-3xl text-amber-500 mx-auto mb-4 relative z-10 group-hover:scale-110 transition duration-500"><i class="fa-solid fa-folder-closed"></i></div><h4 class="font-bold text-slate-700 text-sm line-clamp-1 relative z-10">${name}</h4><div class="mt-3 relative z-10"><span class="text-[9px] font-black text-amber-500 bg-white px-3 py-1 rounded-full border border-amber-50">${count} Files</span></div></div>`; });
         container.appendChild(grid);
     } else {
         const filtered = data.filter(item => (item.category || 'ทั่วไป') === current);
@@ -325,6 +315,8 @@ export function renderDocumentSystem(data, containerId, type = 'official', page 
         renderPagination(`${containerId}-pagination`, filtered.length, DOCS_ITEMS_PER_PAGE, page, `window.pagedDoc_${type}`);
     }
 }
+window.selectDocFolder = (cid, type, catName) => { currentDocFolder[type] = catName; const data = type === 'official' ? allOfficialDocs : allFormDocs; renderDocumentSystem(data, cid, type, 1); };
+window.clearDocFolder = (cid, type) => { currentDocFolder[type] = null; const data = type === 'official' ? allOfficialDocs : allFormDocs; renderDocumentSystem(data, cid, type, 1); };
 
 export function renderPersonGrid(data, containerId) {
     const container = document.getElementById(containerId); if (!container) return; container.innerHTML = '';
@@ -354,4 +346,4 @@ export function renderHomeNews(newsList) {
     [...newsList].sort((a, b) => b.id - a.id).slice(0,4).forEach(n => { c.innerHTML += `<div class="p-4 border-b border-slate-50 flex gap-4 hover:bg-white/80 cursor-pointer transition rounded-2xl group" onclick="window.open('${n.link || '#'}', '_blank')"><div class="w-20 h-14 bg-slate-100 rounded-xl overflow-hidden shrink-0">${n.image ? `<img src="${n.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">` : ''}</div><div class="flex-1 min-w-0 py-0.5"><h4 class="text-sm font-bold text-slate-700 line-clamp-1 group-hover:text-blue-600 transition-colors">${n.title}</h4><p class="text-[10px] font-black text-slate-400 uppercase mt-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-400 inline-block mr-1"></span> ${new Date(n.date).toLocaleDateString('th-TH')}</p></div></div>`; }); 
 }
 
-console.log("Lumina Bento Full Version: Connected");
+console.log("Lumina Super Full Version: Ready");

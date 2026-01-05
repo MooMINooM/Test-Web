@@ -557,9 +557,50 @@
         <div id="news-pagination" class="mt-16 flex justify-center"></div>
     </div>
 </section>
-            <section id="page-teacher-achievements" class="page-content hidden"><div class="bg-white rounded-2xl shadow p-8"><h2 class="section-title">ผลงานครู</h2><div id="teacher-achievements-container"></div></div></section>
-            <section id="page-student-achievements" class="page-content hidden"><div class="bg-white rounded-2xl shadow p-8"><h2 class="section-title">ผลงานนักเรียน</h2><div id="student-achievements-container"></div></div></section>
-            <section id="page-school-achievements" class="page-content hidden"><div class="bg-white rounded-2xl shadow p-8"><h2 class="section-title">ผลงานสถานศึกษา</h2><div id="school-achievements-container" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div></div></section>
+            <section id="page-teacher-achievements" class="page-content hidden">
+    <div class="max-w-7xl mx-auto animate-fade-in pb-20">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+            <h2 class="section-title !mb-0">ผลงานครูและบุคลากร</h2>
+            <div class="relative group w-full md:w-80">
+                <input type="text" id="search-teacher" oninput="window.filterAchievements('search-teacher', 'teacher', 'teacher-achievements-container')" 
+                    placeholder="ค้นชื่อครู/ชื่อรางวัล..." 
+                    class="w-full bg-white border border-slate-200 px-6 py-3 rounded-[1.5rem] shadow-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all">
+                <i class="fa-solid fa-magnifying-glass absolute right-5 top-1/2 -translate-y-1/2 text-slate-300"></i>
+            </div>
+        </div>
+        <div id="teacher-achievements-container"></div>
+    </div>
+</section>
+
+<section id="page-student-achievements" class="page-content hidden">
+    <div class="max-w-7xl mx-auto animate-fade-in pb-20">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+            <h2 class="section-title !mb-0">ผลงานนักเรียน</h2>
+            <div class="relative group w-full md:w-80">
+                <input type="text" id="search-student" oninput="window.filterAchievements('search-student', 'student', 'student-achievements-container')" 
+                    placeholder="ค้นชื่อนักเรียน/รางวัล..." 
+                    class="w-full bg-white border border-slate-200 px-6 py-3 rounded-[1.5rem] shadow-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all">
+                <i class="fa-solid fa-magnifying-glass absolute right-5 top-1/2 -translate-y-1/2 text-slate-300"></i>
+            </div>
+        </div>
+        <div id="student-achievements-container"></div>
+    </div>
+</section>
+
+<section id="page-school-achievements" class="page-content hidden">
+    <div class="max-w-7xl mx-auto animate-fade-in pb-20">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+            <h2 class="section-title !mb-0">ผลงานสถานศึกษา</h2>
+            <div class="relative group w-full md:w-80">
+                <input type="text" id="search-school" oninput="window.filterAchievements('search-school', 'school', 'school-achievements-container')" 
+                    placeholder="ค้นหาชื่อรางวัล/รายการ..." 
+                    class="w-full bg-white border border-slate-200 px-6 py-3 rounded-[1.5rem] shadow-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all">
+                <i class="fa-solid fa-magnifying-glass absolute right-5 top-1/2 -translate-y-1/2 text-slate-300"></i>
+            </div>
+        </div>
+        <div id="school-achievements-container"></div>
+    </div>
+</section>
             <section id="page-innovations" class="page-content hidden">
     <div class="max-w-7xl mx-auto animate-fade-in pb-20">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">

@@ -57,7 +57,7 @@ function getSubjectBadge(subject) {
 }
 
 // =============================================================================
-// 2. SCHOOL INFO & MEDIA RENDERER
+// 2. SCHOOL INFO & MEDIA RENDERER (Updated with Map & Colors)
 // =============================================================================
 
 export function renderSchoolInfo(dataList) {
@@ -65,19 +65,15 @@ export function renderSchoolInfo(dataList) {
     const info = Array.isArray(dataList) ? dataList[0] : dataList;
     if (!info) return;
 
-    // ✅ บรรทัดนี้จะเปลี่ยนชื่อบนแท็บเว็บ (Browser Tab Title)
-    if (info.school_name) {
-        document.title = info.school_name; 
-    }
-        
-    // --- ส่วนที่ใช้แสดงชื่อโรงเรียนใน Hero Banner ---
+    // เปลี่ยนชื่อบนแท็บเว็บ (Browser Tab)
+    if (info.school_name) document.title = info.school_name;
+
+    // แสดงชื่อใน Hero Banner
     const heroNameEl = document.getElementById('hero-school-name-short');
     if (heroNameEl) {
-        // ดึงชื่อโรงเรียนมา แล้วตัดคำว่า "โรงเรียน" ออกเพื่อให้ชื่อสั้นลง
         let shortName = (info.school_name || 'โรงเรียน').replace('โรงเรียน', '').trim();
-        heroNameEl.innerText = `"${shortName}"`; // ใส่เครื่องหมายคำพูดครอบชื่อ
+        heroNameEl.innerText = `"${shortName}"`;
     }
-    // -------------------------------------------
 
     const mapping = {
         'header-school-name': info.school_name, 'header-affiliation': info.affiliation, 'hero-motto': info.motto,
@@ -93,19 +89,43 @@ export function renderSchoolInfo(dataList) {
         if (el) el.innerText = val || '-';
     }
 
-    // Social Links in Footer
+    // Social Links
     const fbEl = document.getElementById('footer-facebook');
     const ytEl = document.getElementById('footer-youtube');
     if (info.facebook_url && fbEl) { fbEl.href = info.facebook_url; fbEl.classList.remove('hidden'); }
     if (info.youtube_url && ytEl) { ytEl.href = info.youtube_url; ytEl.classList.remove('hidden'); }
 
-    // Logo & Header
+    // Logo Handling
     const logoHeader = document.getElementById('header-logo');
     const logoBasic = document.getElementById('header-logo-basic');
     const logoPlaceholder = document.getElementById('logo-placeholder');
     if (info.logo_url) {
         if (logoHeader) { logoHeader.src = info.logo_url; logoHeader.classList.remove('hidden'); }
-        if (logoBasic) { logoBasic.src = info.logo_url; logoBasic.classList.remove('hidden'); if(logoPlaceholder) logoPlaceholder.classList.add('hidden'); }
+        if (logoBasic) { 
+            logoBasic.src = info.logo_url; 
+            logoBasic.classList.remove('hidden'); 
+            if(logoPlaceholder) logoPlaceholder.classList.add('hidden'); 
+        }
+    }
+
+    // --- ✅ เพิ่มคืนค่า: สีประจำโรงเรียน (School Colors) ---
+    if (document.getElementById('school-color-box')) {
+        const c1 = info.color_code_1 || '#3b82f6';
+        const c2 = info.color_code_2 || c1;
+        document.getElementById('school-color-box').style.background = `linear-gradient(135deg, ${c1} 50%, ${c2} 50%)`;
+    }
+
+    // --- ✅ เพิ่มคืนค่า: แผนที่โรงเรียน (Google Maps) ---
+    if (document.getElementById('school-map-container') && info.map_embed) {
+        const mapContainer = document.getElementById('school-map-container');
+        mapContainer.innerHTML = info.map_embed;
+        const ifr = mapContainer.querySelector('iframe');
+        if(ifr) { 
+            ifr.style.width = "100%"; 
+            ifr.style.height = "100%"; 
+            ifr.style.border = "0"; 
+            ifr.style.borderRadius = "2rem"; 
+        }
     }
 
     // VTR Logic
@@ -121,20 +141,18 @@ export function renderSchoolInfo(dataList) {
             if(document.getElementById('vtr-placeholder')) document.getElementById('vtr-placeholder').classList.add('hidden');
         }
     }
+
+    // School Song
     if (info.song_url && document.getElementById('school-song')) {
         const audioEl = document.getElementById('school-song');
         audioEl.src = info.song_url;
-        
-        // แสดงปุ่มควบคุมเพลง (ถ้ามี ID นี้ใน HTML)
         const musicControls = document.getElementById('music-player-controls');
         if (musicControls) musicControls.classList.remove('hidden');
-        
-        console.log("School Song Loaded:", info.song_url);
     }
 }
 
 // =============================================================================
-// 3. ACHIEVEMENT SYSTEM (List Style + Separated Folders)
+// 3. ACHIEVEMENT SYSTEM (List Style + Folder Logic)
 // =============================================================================
 
 export function renderAchievementSystem(containerId, data, type, page = 1) {
@@ -148,7 +166,6 @@ export function renderAchievementSystem(containerId, data, type, page = 1) {
     }
 
     if (currentFolderFilter === null) {
-        // VIEW 1: FOLDERS
         const groups = data.reduce((acc, item) => {
             const key = item.competition || 'รายการอื่นๆ';
             if (!acc[key]) acc[key] = { count: 0, latestImage: item.image };
@@ -167,7 +184,6 @@ export function renderAchievementSystem(containerId, data, type, page = 1) {
         });
         container.appendChild(grid);
     } else {
-        // VIEW 2: LIST STYLE (เหมือนหน้าเอกสาร)
         const startIndex = (page - 1) * ACH_ITEMS_PER_PAGE;
         const pageItems = data.slice(startIndex, startIndex + ACH_ITEMS_PER_PAGE);
 
@@ -196,7 +212,7 @@ export function renderAchievementSystem(containerId, data, type, page = 1) {
 }
 
 // =============================================================================
-// 4. WINDOW BRIDGES (Search & Navigation)
+// 4. WINDOW BRIDGES & SEARCH LOGIC
 // =============================================================================
 
 window.selectFolder = (cid, type, name) => { 
@@ -225,19 +241,11 @@ window.clearFolderFilter = (cid, type) => {
 
 window.filterAchievements = (inputId, type, containerId) => {
     const val = document.getElementById(inputId).value.toLowerCase().trim();
-    let source = [];
-    if (type==='teacher') source = allTeacherData;
-    else if (type==='student') source = allStudentData;
-    else if (type==='school') source = allSchoolData;
-    else if (type==='onet') source = onetData;
-    else if (type==='nt') source = ntData;
-    else if (type==='rt') source = rtData;
-
-    const filtered = source.filter(i => {
-        return [i.title, i.students, i.name, i.competition, i.subject].join(' ').toLowerCase().includes(val);
-    });
+    let source = (type==='teacher') ? allTeacherData : (type==='student' ? allStudentData : allSchoolData);
+    if(type==='onet') source = onetData; if(type==='nt') source = ntData; if(type==='rt') source = rtData;
+    const f = source.filter(i => [i.title, i.students, i.name, i.competition, i.subject].join(' ').toLowerCase().includes(val));
     currentFolderFilter = val ? `ผลการค้นหา: "${val}"` : null;
-    renderAchievementSystem(containerId, filtered, type, 1);
+    renderAchievementSystem(containerId, f, type, 1);
 };
 
 // Pagination Bridges
@@ -249,7 +257,7 @@ window.pagedAch_nt = (p) => renderAchievementSystem('nt-container', ntData, 'nt'
 window.pagedAch_rt = (p) => renderAchievementSystem('rt-container', rtData, 'rt', p);
 
 // =============================================================================
-// 5. CORE RENDERERS (School, News, Innovation, Docs)
+// 5. OTHER RENDERERS (Personnel, News, Innovation, Docs)
 // =============================================================================
 
 export function renderSchoolAchievements(data) { 
@@ -259,7 +267,6 @@ export function renderSchoolAchievements(data) {
     ntData = allSchoolData.filter(i => (i.title + i.competition).includes('NT'));
     rtData = allSchoolData.filter(i => (i.title + i.competition).includes('RT'));
     const general = allSchoolData.filter(i => !['O-NET','NT','RT'].some(k => (i.title+i.competition).includes(k)));
-
     renderAchievementSystem('school-achievements-container', general, 'school'); 
     if(document.getElementById('onet-container')) renderAchievementSystem('onet-container', onetData, 'onet');
     if(document.getElementById('nt-container')) renderAchievementSystem('nt-container', ntData, 'nt');
@@ -275,13 +282,12 @@ export function renderNews(data, page = 1) {
     const container = document.getElementById('news-container');
     if (!container) return;
     container.innerHTML = '';
-    const start = (page - 1) * NEWS_ITEMS_PER_PAGE;
-    const items = data.slice(start, start + NEWS_ITEMS_PER_PAGE);
+    const items = data.slice((page-1)*NEWS_ITEMS_PER_PAGE, page*NEWS_ITEMS_PER_PAGE);
     items.forEach(news => {
         const div = document.createElement('div');
         div.className = "bg-white/80 border border-slate-100 rounded-[2rem] p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col md:flex-row gap-6 mb-6 group cursor-pointer";
         div.onclick = () => { if(news.link) window.open(news.link, '_blank'); };
-        div.innerHTML = `<div class="w-full md:w-64 h-48 bg-slate-100 rounded-[1.5rem] overflow-hidden shrink-0 relative">${news.image ? `<img src="${news.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-[1.5s]">` : ''}<div class="absolute top-3 left-3 bg-white/90 backdrop-blur px-3 py-1 rounded-lg text-[9px] font-black text-slate-500 border border-white">News</div></div><div class="flex-1 flex flex-col justify-between py-1"><div class="space-y-3"><h4 class="font-bold text-xl text-slate-800 group-hover:text-blue-600 transition-colors line-clamp-2">${news.title}</h4><p class="text-slate-500 text-sm leading-relaxed">ข้อมูลประชาสัมพันธ์ประจำวันที่ ${new Date(news.date).toLocaleDateString('th-TH')}</p></div><div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-50"><span class="text-[11px] font-bold text-slate-400"><i class="fa-regular fa-clock text-blue-400"></i> ${new Date(news.date).toLocaleDateString('th-TH')}</span><span class="text-blue-600 text-[10px] font-black group-hover:translate-x-2 transition-transform">Read More <i class="fa-solid fa-arrow-right"></i></span></div></div>`;
+        div.innerHTML = `<div class="w-full md:w-64 h-48 bg-slate-100 rounded-[1.5rem] overflow-hidden shrink-0 relative">${news.image ? `<img src="${news.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-[1.5s]">` : ''}<div class="absolute top-3 left-3 bg-white/90 backdrop-blur px-3 py-1 rounded-lg text-[9px] font-black text-slate-500 border border-white">News</div></div><div class="flex-1 flex flex-col justify-between py-1"><div class="space-y-3"><h4 class="font-bold text-xl text-slate-800 group-hover:text-blue-600 transition-colors line-clamp-2">${news.title}</h4><p class="text-slate-500 text-sm leading-relaxed">ข้อมูลประชาสัมพันธ์วันที่ ${new Date(news.date).toLocaleDateString('th-TH')}</p></div><div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-50"><span class="text-[11px] font-bold text-slate-400"><i class="fa-regular fa-clock text-blue-400"></i> ${new Date(news.date).toLocaleDateString('th-TH')}</span><span class="text-blue-600 text-[10px] font-black group-hover:translate-x-2 transition-transform">Read More <i class="fa-solid fa-arrow-right"></i></span></div></div>`;
         container.appendChild(div);
     });
     renderPagination('news-pagination', data.length, NEWS_ITEMS_PER_PAGE, page, "window.pagedNews");
@@ -293,8 +299,7 @@ export function renderInnovations(data, page = 1) {
     const container = document.getElementById('innovations-container');
     if (!container) return;
     container.innerHTML = '';
-    const start = (page - 1) * INNOV_ITEMS_PER_PAGE;
-    const items = data.slice(start, start + INNOV_ITEMS_PER_PAGE);
+    const items = data.slice((page-1)*INNOV_ITEMS_PER_PAGE, page*INNOV_ITEMS_PER_PAGE);
     container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fade-in";
     items.forEach(item => {
         const div = document.createElement('div');
@@ -354,4 +359,4 @@ export function renderHomeNews(newsList) {
     [...newsList].sort((a, b) => b.id - a.id).slice(0,4).forEach(n => { c.innerHTML += `<div class="p-4 border-b border-slate-50 flex gap-4 hover:bg-white/80 cursor-pointer transition rounded-2xl group" onclick="window.open('${n.link || '#'}', '_blank')"><div class="w-20 h-14 bg-slate-100 rounded-xl overflow-hidden shrink-0">${n.image ? `<img src="${n.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">` : ''}</div><div class="flex-1 min-w-0 py-0.5"><h4 class="text-sm font-bold text-slate-700 line-clamp-1 group-hover:text-blue-600 transition-colors">${n.title}</h4><p class="text-[10px] font-black text-slate-400 uppercase mt-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-400 inline-block mr-1"></span> ${new Date(n.date).toLocaleDateString('th-TH')}</p></div></div>`; }); 
 }
 
-console.log("Lumina Final Super Full Version: Connected");
+console.log("Lumina Final Super Full Version: Connected with Maps & Colors");

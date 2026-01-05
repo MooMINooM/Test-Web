@@ -116,6 +116,16 @@ export function renderSchoolInfo(dataList) {
             if(document.getElementById('vtr-placeholder')) document.getElementById('vtr-placeholder').classList.add('hidden');
         }
     }
+    if (info.song_url && document.getElementById('school-song')) {
+        const audioEl = document.getElementById('school-song');
+        audioEl.src = info.song_url;
+        
+        // แสดงปุ่มควบคุมเพลง (ถ้ามี ID นี้ใน HTML)
+        const musicControls = document.getElementById('music-player-controls');
+        if (musicControls) musicControls.classList.remove('hidden');
+        
+        console.log("School Song Loaded:", info.song_url);
+    }
 }
 
 // =============================================================================

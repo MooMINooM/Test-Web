@@ -220,8 +220,6 @@ export function renderAchievementSystem(containerId, data, type, page = 1) {
             grid.appendChild(div);
         });
         container.appendChild(grid);
-    }
-        container.appendChild(grid);
     } else {
         // --- VIEW 2: แยกรูปแบบตามประเภท ---
         const startIndex = (page - 1) * ACH_ITEMS_PER_PAGE;

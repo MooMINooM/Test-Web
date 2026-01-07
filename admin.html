@@ -134,8 +134,12 @@
                 { key: "song_url", label: "เพลงโรงเรียน (File URL)", type: "url" },
                 { key: "facebook", label: "Facebook URL", type: "url" },
                 { key: "youtube", label: "Youtube Channel URL", type: "url" },
-                // ✅ นี่ครับ! ช่องสำหรับใส่โค้ดแผนที่
-                { key: "map_embed", label: "Google Maps Embed Code (วางโค้ด iframe ที่นี่)", type: "textarea", rows: 4 } 
+                { key: "map_embed", label: "Google Maps Embed Code (วางโค้ด iframe ที่นี่)", type: "textarea", rows: 4 },
+
+                // ✅ เพิ่มส่วนป๊อปอัพประกาศพิเศษ
+                { type: "header", label: "--- 6. ป๊อปอัพประกาศพิเศษ (Popup Announcement) ---" },
+                { key: "popup_img", label: "URL รูปภาพประกาศ (แสดงเมื่อเข้าเว็บ)", type: "url" },
+                { key: "show_popup", label: "สถานะการแสดงป๊อปอัพ", type: "select", options: ["เปิดใช้งาน", "ปิดการใช้งาน"] }
             ]},
 
             personnel: { title: "บุคลากรปัจจุบัน", fields: [{key:"name",label:"ชื่อ-สกุล",type:"text",required:true},{key:"role",label:"ตำแหน่ง",type:"text",required:true},{key:"image",label:"รูปภาพ (URL)",type:"url"}]},
@@ -157,7 +161,7 @@
         };
 
         let currentSection, currentData;
-        async function checkAuth() { try { const { data: { session } } = await supabaseAdmin.auth.getSession(); if (!session) window.location.href = 'index.html'; } catch (e) {} } checkAuth();
+        async function checkAuth() { try { const { data: { session } } = await supabaseAdmin.auth.getSession(); if (!session) window.location.href = 'index.html'; } catch(e) {} } checkAuth();
         async function logout() { await supabaseAdmin.auth.signOut(); window.location.href = 'index.html'; }
 
         async function loadSection(sec) {
@@ -179,15 +183,44 @@
             const f = SCHEMAS['school_info'].fields.map(field => {
                 if(field.type==='header') return `<h3 class="font-bold text-blue-800 text-lg mt-6 border-b pb-2">${field.label}</h3>`;
                 let val = data[field.key] || '';
-                let inp = field.type==='textarea' ? `<textarea id="si-${field.key}" class="w-full border p-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" rows="${field.rows}">${val}</textarea>` : (field.type==='color' ? `<div class="flex items-center gap-3"><input type="color" id="si-${field.key}" value="${val||'#000000'}" class="h-10 w-20 border rounded cursor-pointer"><span class="text-sm text-gray-500">เลือกสี</span></div>` : `<input type="${field.type}" id="si-${field.key}" value="${val}" class="w-full border p-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">`);
+                
+                // Logic พิเศษสำหรับ show_popup (Boolean -> String)
+                if(field.key === 'show_popup') {
+                    val = (data[field.key] === true) ? "เปิดใช้งาน" : "ปิดการใช้งาน";
+                }
+
+                let inp;
+                if(field.type==='textarea') {
+                    inp = `<textarea id="si-${field.key}" class="w-full border p-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" rows="${field.rows}">${val}</textarea>`;
+                } else if(field.type==='color') {
+                    inp = `<div class="flex items-center gap-3"><input type="color" id="si-${field.key}" value="${val||'#000000'}" class="h-10 w-20 border rounded cursor-pointer"><span class="text-sm text-gray-500">เลือกสี</span></div>`;
+                } else if(field.type==='select') {
+                    inp = `<select id="si-${field.key}" class="w-full border p-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                        ${field.options.map(opt => `<option value="${opt}" ${val===opt?'selected':''}>${opt}</option>`).join('')}
+                    </select>`;
+                } else {
+                    inp = `<input type="${field.type}" id="si-${field.key}" value="${val}" class="w-full border p-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">`;
+                }
+
                 return `<div><label class="block text-sm font-bold text-gray-700 mb-1">${field.label}</label>${inp}</div>`;
             }).join('');
+
             document.getElementById('main-area').innerHTML = `<div class="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-200"><h2 class="text-2xl font-bold mb-6 text-gray-800">ข้อมูลโรงเรียน</h2><form id="school-info-form" class="space-y-4"><input type="hidden" id="si-id" value="${data.id||''}">${f}<button type="button" onclick="saveSchoolInfo()" class="mt-8 w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition">บันทึกข้อมูลโรงเรียน</button></form></div>`;
         }
 
         async function saveSchoolInfo() {
             const data = {}; const id = document.getElementById('si-id').value;
-            SCHEMAS['school_info'].fields.forEach(f => { if(f.key) data[f.key] = document.getElementById(`si-${f.key}`).value; });
+            SCHEMAS['school_info'].fields.forEach(f => { 
+                if(f.key) {
+                    let val = document.getElementById(`si-${f.key}`).value;
+                    // แปลงค่า show_popup กลับเป็น Boolean ก่อนบันทึก
+                    if(f.key === 'show_popup') {
+                        data[f.key] = (val === "เปิดใช้งาน");
+                    } else {
+                        data[f.key] = val;
+                    }
+                } 
+            });
             const {error} = id ? await supabaseAdmin.from('school_info').update(data).eq('id', id) : await supabaseAdmin.from('school_info').insert([data]);
             if(error) Swal.fire('Error', error.message, 'error'); else Swal.fire('สำเร็จ', 'บันทึกเรียบร้อย', 'success');
         }

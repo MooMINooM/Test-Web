@@ -188,17 +188,26 @@ export function renderAchievementSystem(containerId, data, type, page = 1) {
     }
 
     if (currentFolderFilter === null) {
-        // --- VIEW 1: FOLDERS (เหมือนเดิม) ---
+        // --- VIEW 1: FOLDERS (ปรับปรุงให้เรียงลำดับจากใหม่ไปเก่า) ---
         const groups = data.reduce((acc, item) => {
             const key = item.competition || 'รายการอื่นๆ';
             if (!acc[key]) acc[key] = { count: 0, latestImage: item.image };
-            acc[key].count++; if(!acc[key].latestImage && item.image) acc[key].latestImage = item.image;
+            acc[key].count++; 
+            if(!acc[key].latestImage && item.image) acc[key].latestImage = item.image;
             return acc;
         }, {});
 
+        // ✅ เพิ่มการเรียงลำดับ: เอาชื่อโฟลเดอร์มา Sort ก่อนนำไปแสดงผล
+        const sortedKeys = Object.keys(groups).sort((a, b) => {
+            // เรียงตามตัวเลข (numeric: true) และเอาค่ามาก (ปีใหม่กว่า) ขึ้นก่อน (b localeCompare a)
+            return b.localeCompare(a, 'th', { numeric: true });
+        });
+
         const grid = document.createElement('div');
         grid.className = "grid grid-cols-2 md:grid-cols-4 gap-6 animate-fade-in";
-        Object.keys(groups).forEach(name => {
+
+        // ✅ เปลี่ยนจาก Object.keys(groups).forEach เป็น sortedKeys.forEach
+        sortedKeys.forEach(name => {
             const div = document.createElement('div');
             div.className = "group bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-blue-200 hover:-translate-y-2 transition-all duration-500 cursor-pointer text-center relative overflow-hidden h-full flex flex-col items-center justify-center";
             div.onclick = () => window.selectFolder(containerId, type, name);
@@ -210,6 +219,8 @@ export function renderAchievementSystem(containerId, data, type, page = 1) {
                 <div class="mt-3"><span class="text-[10px] font-black text-blue-400 uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-full border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-500">${groups[name].count} Items</span></div>`;
             grid.appendChild(div);
         });
+        container.appendChild(grid);
+    }
         container.appendChild(grid);
     } else {
         // --- VIEW 2: แยกรูปแบบตามประเภท ---

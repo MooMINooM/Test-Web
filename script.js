@@ -42,10 +42,14 @@ function setupNavigation() {
 // ✅ Data Fetching System
 async function fetchAndRenderAll() {
     
-    // 1. ข้อมูลโรงเรียน
+    // 1. ข้อมูลโรงเรียน & ป๊อปอัพประกาศพิเศษ
     try {
         const { data: info } = await supabase.from('school_info').select('*').limit(1).single();
-        if(info) UI.renderSchoolInfo(info);
+        if(info) {
+            UI.renderSchoolInfo(info);
+            // ✅ เพิ่มบรรทัดนี้เพื่อแสดงป๊อปอัพแจ้งข่าวพิเศษ
+            UI.renderAnnouncement(info); 
+        }
     } catch (e) { console.warn("Load School Info Failed", e); }
 
     // 2. ข่าวสาร
@@ -92,19 +96,15 @@ async function fetchAndRenderAll() {
 
     } catch (e) { console.warn("Load Achievements Failed", e); }
 
-    // 4. เอกสาร & นวัตกรรม (✅ แก้ไข: แยกตาราง documents และ forms)
+    // 4. เอกสาร & นวัตกรรม
     try {
-        // ดึงเอกสารราชการ
         const { data: docs } = await supabase.from('documents').select('*');
         if(docs) {
-            // ใช้ renderDocumentSystem เพื่อรองรับระบบ Folder
             UI.renderDocumentSystem(docs, 'documents-official-container', 'official');
         }
 
-        // ดึงแบบฟอร์ม (แก้ไขให้ดึงจากตาราง forms)
         const { data: forms } = await supabase.from('forms').select('*');
         if(forms) {
-            // ส่ง type = 'form'
             UI.renderDocumentSystem(forms, 'documents-forms-container', 'form'); 
         }
 
